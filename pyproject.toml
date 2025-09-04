@@ -1,0 +1,23 @@
+[project]
+name = "applied-genai-lab"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "duckduckgo-search>=8.1.1",
+    "matplotlib>=3.10.6",
+    "mlflow>=3.3.2",
+    "numpy>=2.3.2",
+    "openai>=1.104.2",
+    "openai-agents>=0.2.11",
+    "pandas>=2.3.2",
+    "plotly>=6.3.0",
+    "seaborn>=0.13.2",
+]
+
+[dependency-groups]
+dev = [
+    "gradio>=5.44.1",
+    "pypdf>=6.0.0",
+]
