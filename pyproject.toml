@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "duckduckgo-search>=8.1.1",
+    "langgraph>=0.6.6",
     "matplotlib>=3.10.6",
     "mlflow>=3.3.2",
     "numpy>=2.3.2",
