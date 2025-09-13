@@ -1,16 +1,13 @@
 [project]
-name="applied-GenAI-lab"
+name="agentic"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python=">=3.9"
+requires-python=">=3.12.9"
 dependencies = [
     "duckduckgo-search>=8.1.1",
     "langgraph>=0.6.6",
-    "matplotlib>=3.10.6",
-    "mlflow>=3.3.2",
     "nbdev>=2.4.5",
-    "numpy>=2.3.2",
     "openai>=1.104.2",
     "openai-agents>=0.2.11",
     "pandas>=2.3.2",
@@ -24,3 +21,11 @@ dev = [
     "gradio>=5.44.1",
     "pypdf>=6.0.0",
 ]
+
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["agentic"]  

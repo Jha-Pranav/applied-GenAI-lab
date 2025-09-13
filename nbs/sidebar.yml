@@ -1,0 +1,25 @@
+website:
+  sidebar:
+    contents:
+      - index.ipynb
+      - 00_core.ipynb
+      - section: buddy
+        contents:
+          - section: backend
+            contents:
+              - buddy/backend/schemas.ipynb
+              - buddy/backend/tools.ipynb
+          - section: configs
+            contents:
+              - buddy/configs/prompts.ipynb
+          - section: frontend
+            contents:
+              - buddy/frontend/client.ipynb
+      - section: learning
+        contents:
+          - learning/competition.ipynb
+          - learning/deep-research.ipynb
+          - learning/langgraph.ipynb
+          - learning/openai-sdk.ipynb
+          - learning/portfolio-chatboat.ipynb
+          - learning/tool-calling.ipynb

@@ -1,5 +1,5 @@
 def main():
-    print("Hello from applied-genai-lab!")
+    print("Hello from agentic!")
 
 
 if __name__ == "__main__":

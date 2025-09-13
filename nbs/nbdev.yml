@@ -2,8 +2,8 @@ project:
   output-dir: _docs
 
 website:
-  title: "applied-GenAI-lab"
-  site-url: "https://Jha-Pranav.github.io/applied-GenAI-lab"
+  title: "agentic"
+  site-url: "https://Jha-Pranav.github.io/agentic"
   description: "Hands-on projects and experiments exploring the practical capabilities of Generative AI models"
   repo-branch: main
-  repo-url: "https://github.com/Jha-Pranav/applied-GenAI-lab"
+  repo-url: "https://github.com/Jha-Pranav/agentic"
