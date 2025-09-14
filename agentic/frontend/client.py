@@ -9,11 +9,11 @@ import sys
 import os
 import re
 from openai import OpenAI
-from agentic.backend.tools import ToolManager
-from agentic.backend.schemas import ToolCall, FsReadParams, FsWriteParams, ExecuteBashParams, IntrospectParams, TodoParams
+from ..backend.tools import ToolManager
+from ..backend.schemas import ToolCall, FsReadParams, FsWriteParams, ExecuteBashParams, IntrospectParams, TodoParams
 from pydantic import ValidationError
 from typing import List, Dict, Any, Optional
-from agentic.configs.prompts import SYSTEM_PROMPT
+from ..configs.prompts import SYSTEM_PROMPT
 
 # %% ../../nbs/buddy/frontend/client.ipynb 2
 PINK = "\033[38;2;255;182;193m"  # RGB: Light pink
@@ -124,7 +124,7 @@ class BuddyClient:
                 
                 if hasattr(delta, 'reasoning') and delta.reasoning:
                     token = delta.reasoning
-                    # full_content += token
+                    full_content += token
                     print(f"{PINK}{token}{RESET}", end="", flush=True)
 
                 

@@ -2,26 +2,40 @@
 
 # %% auto 0
 __all__ = ['ToolCallMode', 'FsReadOperation', 'FsReadParams', 'WriteCommand', 'FsWriteParams', 'ExecuteBashParams',
-           'IntrospectParams', 'TodoAction', 'TodoParams', 'ToolCall']
+           'CodeInterpreterParams', 'RepoQualityAnalyzerParams', 'IntrospectAction', 'IntrospectParams',
+           'DebateAgentParams', 'DocumentationGeneratorParams', 'MemoryManagerParams', 'TodoAction', 'TodoParams',
+           'ToolCall', 'ToolResponse', 'CritiqueResponse', 'QualityAnalysisResponse']
 
 # %% ../../nbs/buddy/backend/schemas.ipynb 1
-from pydantic import BaseModel, validator
-from typing import List, Dict,Any, Optional, Literal
+from pydantic import BaseModel, field_validator
+from typing import List, Dict, Any, Optional, Literal
 from enum import Enum
 
 # %% ../../nbs/buddy/backend/schemas.ipynb 2
-# fs_read
 class ToolCallMode(str, Enum):
     LINE = "Line"
     DIRECTORY = "Directory"
     SEARCH = "Search"
+    FIND = "Find"
+    GREP = "Grep"
+    TREE = "Tree"
 
 class FsReadOperation(BaseModel):
     mode: ToolCallMode
     path: str
     pattern: Optional[str] = None
+    name_pattern: Optional[str] = None
+    file_pattern: Optional[str] = None
     start_line: Optional[int] = 1
     end_line: Optional[int] = -1
+    depth: Optional[int] = 1
+    max_depth: Optional[int] = 10
+    context_lines: Optional[int] = 2
+    show_hidden: Optional[bool] = False
+    case_sensitive: Optional[bool] = False
+    recursive: Optional[bool] = True
+    file_type: Optional[Literal["file", "dir", "all"]] = "all"
+    smart_chunk: Optional[bool] = True
 
 class FsReadParams(BaseModel):
     operations: List[FsReadOperation]
@@ -32,6 +46,8 @@ class WriteCommand(str, Enum):
     STR_REPLACE = "str_replace"
     INSERT = "insert"
     APPEND = "append"
+    PREPEND = "prepend"
+    DELETE_LINES = "delete_lines"
     
 class FsWriteParams(BaseModel):
     command: WriteCommand
@@ -40,20 +56,82 @@ class FsWriteParams(BaseModel):
     old_str: Optional[str] = None
     new_str: Optional[str] = None
     insert_line: Optional[int] = None
+    start_line: Optional[int] = None
+    end_line: Optional[int] = None
+    create_backup: Optional[bool] = False
+    show_diff: Optional[bool] = True
     summary: Optional[str] = None
 
 
 # %% ../../nbs/buddy/backend/schemas.ipynb 4
 class ExecuteBashParams(BaseModel):
     command: str
+    working_dir: Optional[str] = None
+    timeout: Optional[int] = 30
+    env_vars: Optional[Dict[str, str]] = None
+    capture_output: Optional[bool] = True
+    shell: Optional[str] = "/bin/bash"
     summary: Optional[str] = None
 
 
 # %% ../../nbs/buddy/backend/schemas.ipynb 5
-class IntrospectParams(BaseModel):
-    query: str
+class CodeInterpreterParams(BaseModel):
+    code: str
+    language: Optional[Literal["python"]] = "python"
+    capture_output: Optional[bool] = True
+    save_plots: Optional[bool] = True
+    timeout: Optional[int] = 30
+    working_dir: Optional[str] = None
+    requirements: Optional[List[str]] = None
+
 
 # %% ../../nbs/buddy/backend/schemas.ipynb 6
+class RepoQualityAnalyzerParams(BaseModel):
+    repo_path: str
+    analysis_type: Optional[Literal["full", "security", "performance", "maintainability", "documentation"]] = "full"
+    file_patterns: Optional[List[str]] = None
+    exclude_patterns: Optional[List[str]] = None
+    severity_threshold: Optional[Literal["low", "medium", "high", "critical"]] = "medium"
+
+# %% ../../nbs/buddy/backend/schemas.ipynb 7
+class IntrospectAction(str, Enum):
+    CRITIQUE = "critique"
+    VALIDATE = "validate"
+    REFLECT = "reflect"
+    IMPROVE = "improve"
+
+class IntrospectParams(BaseModel):
+    action: IntrospectAction
+    context: Optional[Dict[str, Any]] = None
+    focus_areas: Optional[List[str]] = None
+
+
+
+# %% ../../nbs/buddy/backend/schemas.ipynb 8
+class DebateAgentParams(BaseModel):
+    decision: str
+    context: str
+    perspectives: Optional[List[str]] = None
+    debate_style: Optional[Literal["pros_cons", "alternatives", "devil_advocate", "stakeholder_views"]] = "pros_cons"
+
+
+# %% ../../nbs/buddy/backend/schemas.ipynb 9
+class DocumentationGeneratorParams(BaseModel):
+    repo_path: str
+    doc_type: Literal["api", "usage", "architecture", "setup", "comprehensive"]
+    output_format: Optional[Literal["markdown", "html", "rst"]] = "html"
+    include_examples: Optional[bool] = True
+    include_diagrams: Optional[bool] = False
+    target_audience: Optional[Literal["developers", "users", "contributors"]] = "developers"
+    output_path: Optional[str] = "docs"
+
+# %% ../../nbs/buddy/backend/schemas.ipynb 10
+class MemoryManagerParams(BaseModel):
+    action: Literal["status", "compress", "optimize"]
+    messages: Optional[List[Dict[str, Any]]] = None
+
+
+# %% ../../nbs/buddy/backend/schemas.ipynb 11
 class TodoAction(str, Enum):
     PLAN = "plan"
     EXECUTE = "execute"
@@ -64,24 +142,54 @@ class TodoParams(BaseModel):
     action: TodoAction
     step_id: Optional[int] = None
 
-# %% ../../nbs/buddy/backend/schemas.ipynb 7
+
+# %% ../../nbs/buddy/backend/schemas.ipynb 12
 class ToolCall(BaseModel):
     name: str
     parameters: Dict[str, Any]
 
-    @validator('parameters')
-    def validate_parameters(cls, args, values):
-        tool_name = values.get('name')
+    @field_validator('parameters')
+    @classmethod
+    def validate_parameters(cls, args, info):
+        tool_name = info.data.get('name')
         
-        if tool_name == 'fs_read':
-            FsReadParams(**args)
-        elif tool_name == 'fs_write':
-            FsWriteParams(**args)
-        elif tool_name == 'execute_bash':
-            ExecuteBashParams(**args)
-        elif tool_name == 'introspect':
-            IntrospectParams(**args)
-        elif tool_name == 'todo':
-            TodoParams(**args)
+        validation_map = {
+            'fs_read': FsReadParams,
+            'fs_write': FsWriteParams,
+            'execute_bash': ExecuteBashParams,
+            'code_interpreter': CodeInterpreterParams,
+            'repo_quality_analyzer': RepoQualityAnalyzerParams,
+            'documentation_generator': DocumentationGeneratorParams,
+            'memory_manager': MemoryManagerParams,
+            'introspect': IntrospectParams,
+            'debate_agent': DebateAgentParams,
+            'todo': TodoParams
+        }
+        
+        if tool_name in validation_map:
+            validation_map[tool_name](**args)
         
         return args
+
+# %% ../../nbs/buddy/backend/schemas.ipynb 13
+class ToolResponse(BaseModel):
+    success: bool
+    data: Optional[Dict[str, Any]] = None
+    error: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
+    
+class CritiqueResponse(BaseModel):
+    overall_assessment: str
+    strengths: List[str]
+    weaknesses: List[str]
+    risks: List[str]
+    suggestions: List[str]
+    score: int  # 1-10 scale
+    
+class QualityAnalysisResponse(BaseModel):
+    repository: str
+    files_analyzed: int
+    quality_score: int  # 0-100 scale
+    grade: str  # A-F letter grade
+    recommendations: List[Dict[str, Any]]
+    summary: Dict[str, Any]
