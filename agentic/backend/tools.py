@@ -131,7 +131,19 @@ class ToolManager:
         
         return available_tools
 
-
+    def execute_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        if tool_name not in self.tools:
+            return {"error": f"Unknown tool: {tool_name}"}
+        
+        try:
+            result = self.tools[tool_name](**parameters)
+            # Handle any remaining async issues
+            if hasattr(result, '__await__'):
+                return {"error": "Tool returned async result"}
+            return result
+        except Exception as e:
+            return {"error": str(e)}
+    
     def _fs_read(self, operations: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Read files, directories, or search for patterns"""
         results = []
