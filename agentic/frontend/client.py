@@ -9,7 +9,7 @@ import sys
 import os
 import re
 from openai import OpenAI
-from ..backend.tools import ToolManager
+from ..backend.tools.manager import ToolManager
 from ..backend.schemas import ToolCall, FsReadParams, FsWriteParams, ExecuteBashParams, IntrospectParams, TodoParams
 from pydantic import ValidationError
 from typing import List, Dict, Any, Optional

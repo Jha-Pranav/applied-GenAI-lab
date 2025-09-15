@@ -13,6 +13,8 @@ _tmp*
 tmp*
 tags
 *.pkg
+mlartifacts
+mlruns
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

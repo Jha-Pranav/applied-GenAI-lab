@@ -6,7 +6,6 @@ __all__ = ['get_system_context', 'get_system_prompt']
 # %% ../../nbs/buddy/configs/prompts.ipynb 1
 import os
 import platform
-import psutil
 from pathlib import Path
 
 def get_system_context():

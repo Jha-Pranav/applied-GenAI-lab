@@ -1,6 +1,4 @@
-def main():
-    print("Hello from agentic!")
-
+from agentic.frontend.client import main
 
 if __name__ == "__main__":
     main()
