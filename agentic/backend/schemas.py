@@ -4,10 +4,11 @@
 __all__ = ['ToolCallMode', 'FsReadOperation', 'FsReadParams', 'WriteCommand', 'FsWriteParams', 'ExecuteBashParams',
            'CodeInterpreterParams', 'RepoQualityAnalyzerParams', 'IntrospectAction', 'IntrospectParams',
            'DebateAgentParams', 'DocumentationGeneratorParams', 'MemoryManagerParams', 'TodoAction', 'TodoParams',
-           'ToolCall', 'ToolResponse', 'CritiqueResponse', 'QualityAnalysisResponse']
+           'ToolCall', 'ToolResponse', 'CritiqueResponse', 'QualityAnalysisResponse', 'ComplexityLevel', 'BuddyTool',
+           'ExecutionMode', 'Task', 'ExecutionPlan', 'AnalysisResult']
 
 # %% ../../nbs/buddy/backend/schemas.ipynb 1
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, Field
 from typing import List, Dict, Any, Optional, Literal
 from enum import Enum
 
@@ -193,3 +194,56 @@ class QualityAnalysisResponse(BaseModel):
     grade: str  # A-F letter grade
     recommendations: List[Dict[str, Any]]
     summary: Dict[str, Any]
+
+# %% ../../nbs/buddy/backend/schemas.ipynb 14
+class ComplexityLevel(str, Enum):
+    SIMPLE = "simple"
+    MODERATE = "moderate"
+    COMPLEX = "complex"
+
+class BuddyTool(str, Enum):
+    FS_READ = "fs_read"
+    FS_WRITE = "fs_write"
+    EXECUTE_BASH = "execute_bash"
+    CODE_INTERPRETER = "code_interpreter"
+    CODE_QUALITY = "code_quality"
+    DOC_GENERATOR = "doc_generator"
+    MEMORY_MANAGER = "memory_manager"
+    INTROSPECT = "introspect"
+    DEBATE_AGENT = "debate_agent"
+    TODO = "todo"
+
+class ExecutionMode(str, Enum):
+    SEQUENTIAL = "sequential"
+    PARALLEL = "parallel"
+
+class Task(BaseModel):
+    """Buddy-executable task with atomic action steps"""
+    id: str = Field(..., description="Unique task identifier")
+    name: str = Field(..., description="Task name")
+    description: str = Field(..., description="Detailed task description with context and requirements")
+    complexity: ComplexityLevel = Field(..., description="Task complexity")
+    dependencies: List[str] = Field(default_factory=list, description="Required predecessor tasks")
+    buddy_tools: List[BuddyTool] = Field(..., description="Buddy tools needed for this task")
+    execution_mode: ExecutionMode = Field(default=ExecutionMode.SEQUENTIAL)
+    frameworks: Dict[str, str] = Field(default_factory=dict, description="Specific frameworks/libraries to use")
+    actions: List[Dict[str, Any]] = Field(..., description="Atomic action steps with sub-steps")
+    success_criteria: str = Field(..., description="How to verify completion")
+    expected_outputs: List[str] = Field(default_factory=list, description="Files/artifacts that will be created")
+
+class ExecutionPlan(BaseModel):
+    """Buddy execution plan"""
+    sequential_phases: List[List[str]] = Field(..., description="Ordered phases of task IDs")
+    parallel_groups: List[List[str]] = Field(default_factory=list, description="Tasks that can run in parallel")
+    critical_path: List[str] = Field(..., description="Critical sequence of tasks")
+    total_actions: int = Field(..., description="Total number of action steps needed")
+
+class AnalysisResult(BaseModel):
+    """Complete task analysis for Buddy execution"""
+    input_complexity: ComplexityLevel = Field(..., description="Overall complexity")
+    recommended_frameworks: Dict[str, str] = Field(..., description="Recommended frameworks/tools by category")
+    tasks: List[Task] = Field(..., description="Buddy-executable tasks")
+    execution_plan: ExecutionPlan = Field(..., description="Execution strategy")
+    buddy_tools_needed: List[BuddyTool] = Field(..., description="All Buddy tools required")
+    success_criteria: List[str] = Field(..., description="Project success criteria")
+

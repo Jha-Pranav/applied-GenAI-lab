@@ -1,0 +1,45 @@
+[model]
+name = "qwen3:14b"
+#name = "gpt-oss:20b"
+url = "http://192.168.29.147:11500/v1"
+#url = "http://localhost:11434/v1"
+api_key = "ollama"
+timeout = 300.0
+
+[settings]
+temperature = 0.7
+max_tokens = 10000
+auto_approve = true
+stream = true
+
+[reasoning]
+show_thinking = true
+thinking_color = "pink"
+retry_count = 2
+
+[tools]
+default_tools = [
+    "fs_read",
+    "fs_write",
+    "execute_bash",
+    "code_interpreter", 
+    "code_quality",
+    "doc_generator", 
+    "memory_manager", 
+    "introspect", 
+    "debate_agent", 
+    "task_planner", 
+    "task_monitor", 
+    "task_executor"
+    ]
+
+[paths]
+project_root = "."
+test_dir = "test"
+docs_dir = "docs"
+
+[mlflow]
+enabled = false
+tracking_uri = "http://localhost:5000"
+experiment_name = "BuddyAI"
+enable_tracing = true

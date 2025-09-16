@@ -9,37 +9,47 @@ from .fs_read import FsReadTool
 
 from .fs_write import FsWriteTool
 from .execute_bash import ExecuteBashTool
-from .todo import TodoTool
+from .task_planner import TaskPlannerTool
+from .task_monitor import TaskMonitorTool
+from .task_executor import TaskExecutorTool
 from .debate_agent import DebateAgentTool
 from .code_interpreter import CodeInterpreterTool
 from .code_quality import CodeQualityTool
 from .doc_generator import DocGeneratorTool
 from .memory import MemoryManagerTool
+from .introspect import IntrospectTool
 
 # %% ../../../nbs/buddy/backend/tools/manager.ipynb 2
 class ToolManager:
     def __init__(self):
         self.tools = {
+            "task_planner": TaskPlannerTool(),
+            "task_monitor": TaskMonitorTool(),
+            "task_executor": TaskExecutorTool(),
             "fs_read": FsReadTool(),
             "fs_write": FsWriteTool(),
             "execute_bash": ExecuteBashTool(),
-            "todo": TodoTool(),
             "debate_agent": DebateAgentTool(),
             "code_interpreter": CodeInterpreterTool(),
             "code_quality": CodeQualityTool(),
             "doc_generator": DocGeneratorTool(),
             "memory_manager": MemoryManagerTool(),
+            "introspect": IntrospectTool(),
         }
 
     def get_tools(self, requested_tools: List[str]) -> List[Dict]:
         """Convert requested tools to OpenAI function calling format."""
         return [self.tools[tool].get_tool_schema() for tool in requested_tools if tool in self.tools]
 
-    def execute_tool(self, tool_name: str, **kwargs) -> Dict[str, Any]:
+    def execute_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Execute the specified tool with given arguments."""
         if tool_name not in self.tools:
             return {"error": f"Unknown tool: {tool_name}"}
+        
         try:
-            return self.tools[tool_name].execute(**kwargs)
+            result = self.tools[tool_name].execute(**arguments)
+            return result
         except Exception as e:
-            return {"error": f"Tool {tool_name} execution failed: {str(e)}"}
+            error_result = {"error": f"Tool {tool_name} execution failed: {str(e)}"}
+            return error_result
+
