@@ -18,7 +18,7 @@ Create a comprehensive machine learning pipeline for sentiment analysis of custo
 10. **Deployment**: Deploy to cloud infrastructure with auto-scaling
 
 ### Technical Requirements
-- Python 3.9+
+- Python 3.12+
 - scikit-learn, pandas, numpy
 - TensorFlow/PyTorch for deep learning
 - FastAPI for REST API

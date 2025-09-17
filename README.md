@@ -11,57 +11,39 @@ documentation.
 If you are new to using `nbdev` here are some useful pointers to get you
 started.
 
+## ollama setup
+install ollama 
+download your prefered model eg: gpt-oss:20b
+run ollama serve to run it on default port 
+else below can help serve ollama in local network and you can access it via host machine ip address
+export OLLAMA_HOST=0.0.0.0:11500
+ollama serve
+
+
 ### Install agentic in Development mode
 
 ``` sh
 # make sure agentic package is installed in development mode
-$ pip install -e .
+install uv 
+
+$ uv sync
+start jupyter server 
 
 # make changes under nbs/ directory
-# ...
+uv run --with jupyter jupyter lab
 
 # compile to have changes apply to agentic
 $ nbdev_prepare
+# export changes 
+$ nbdev_export
 ```
 
 ## Usage
-
-### Installation
-
-Install latest from the GitHub
-[repository](https://github.com/Jha-Pranav/agentic):
-
-``` sh
-$ pip install git+https://github.com/Jha-Pranav/agentic.git
-```
-
-or from [conda](https://anaconda.org/Jha-Pranav/agentic)
-
-``` sh
-$ conda install -c Jha-Pranav agentic
-```
-
-or from [pypi](https://pypi.org/project/agentic/)
-
-``` sh
-$ pip install agentic
-```
+change config.toml file agentic/configs/config.toml
+uv run main.py --> This will open up interractive shell for you to talk to your buddy 
 
 ### Documentation
 
 Documentation can be found hosted on this GitHub
 [repository](https://github.com/Jha-Pranav/agentic)’s
-[pages](https://Jha-Pranav.github.io/agentic/). Additionally
-you can find package manager specific guidelines on
-[conda](https://anaconda.org/Jha-Pranav/agentic) and
-[pypi](https://pypi.org/project/agentic/) respectively.
-
-## How to use
-
-Fill me in please! Don’t forget code examples:
-
-``` python
-1+1
-```
-
-    2
+[pages](https://Jha-Pranav.github.io/agentic/).

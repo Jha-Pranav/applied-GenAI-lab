@@ -206,7 +206,7 @@ Clear project description
 
 ## 🔧 **Technical Requirements**
 
-- Python 3.9+
+- Python 3.12+
 - Ollama with gpt-oss:20b model
 - requests library for LLM communication
 
