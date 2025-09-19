@@ -30,6 +30,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "gradio" },
+    { name = "lckr-jupyterlab-variableinspector" },
     { name = "pypdf" },
 ]
 
@@ -54,6 +55,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "gradio", specifier = ">=5.44.1" },
+    { name = "lckr-jupyterlab-variableinspector", specifier = ">=3.2.4" },
     { name = "pypdf", specifier = ">=6.0.0" },
 ]
 
@@ -1524,6 +1526,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/12/ac/34cbfb433a10e28c7fd830f91c5a348462ba748413cbb950c7f259e67aa7/lazy_object_proxy-1.12.0-cp314-cp314-musllinux_1_2_aarch64.whl", hash = "sha256:0a83c6f7a6b2bfc11ef3ed67f8cbe99f8ff500b05655d8e7df9aab993a6abc95", size = 69529 },
     { url = "https://files.pythonhosted.org/packages/6f/6a/11ad7e349307c3ca4c0175db7a77d60ce42a41c60bcb11800aabd6a8acb8/lazy_object_proxy-1.12.0-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:256262384ebd2a77b023ad02fbcc9326282bcfd16484d5531154b02bc304f4c5", size = 70391 },
     { url = "https://files.pythonhosted.org/packages/59/97/9b410ed8fbc6e79c1ee8b13f8777a80137d4bc189caf2c6202358e66192c/lazy_object_proxy-1.12.0-cp314-cp314-win_amd64.whl", hash = "sha256:7601ec171c7e8584f8ff3f4e440aa2eebf93e854f04639263875b8c2971f819f", size = 26988 },
+]
+
+[[package]]
+name = "lckr-jupyterlab-variableinspector"
+version = "3.2.4"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/50/1d/4f0ee3ee9cfafdedf94ea8ac9b67081e708806ef420531a80c5e7143534d/lckr_jupyterlab_variableinspector-3.2.4.tar.gz", hash = "sha256:9bad61401ef24cbdd4bc000d882038bbdd9d79550f624bd1930978dd56dddf7b", size = 1438538 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/48/71/6bdb50567c5255ae9f641bee00d2f9573cca9b195a3ef856a472411d1b89/lckr_jupyterlab_variableinspector-3.2.4-py3-none-any.whl", hash = "sha256:36c529dc07f258f66ebcbb4fb4551e410ccc039a6ecc7ad693bbedc79f4e4b12", size = 140378 },
 ]
 
 [[package]]

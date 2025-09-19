@@ -24,6 +24,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "gradio>=5.44.1",
+    "lckr-jupyterlab-variableinspector>=3.2.4",
     "pypdf>=6.0.0",
 ]
 
