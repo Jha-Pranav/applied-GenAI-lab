@@ -106,7 +106,6 @@ class BuddyClient:
                     executed_calls = self._execute_tool_calls(result["tool_calls"])
                     result["tool_calls"] = executed_calls
 
-                
                 # Add assistant response to history
                 assistant_message = {"role": "assistant", "content": result.get("content", "")}
                 if result.get("tool_calls"):
@@ -310,6 +309,7 @@ class BuddyClient:
         """Validate tool call parameters with Pydantic"""
         try:
             if function_name == "fs_read":
+                print("**"*20, arguments)
                 FsReadParams(**arguments)
             elif function_name == "fs_write":
                 FsWriteParams(**arguments)
@@ -327,7 +327,8 @@ class BuddyClient:
             
         except ValidationError as e:
             error_msg = str(e)
-            if "Input should be 'Line', 'Directory' or 'Search'" in error_msg:
+            print(error_msg)
+            if "Input should be 'discover'or 'extract'" in error_msg:
                 print(f"\n⚠️ Invalid mode for {function_name}. Use 'Line' to read files, 'Directory' to list directories, 'Search' to find patterns.")
             else:
                 print(f"\n⚠️ Validation error for {function_name}: {e}")
