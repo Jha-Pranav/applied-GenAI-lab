@@ -2,7 +2,7 @@
 
 # %% auto 0
 __all__ = ['RESET', 'reasoning_config', 'show_thinking', 'thinking_color', 'color_codes', 'color_code', 'show_thinking_header',
-           'show_thinking_footer']
+           'show_thinking_footer', 'ResponseProcessor']
 
 # %% ../../../nbs/buddy/backend/llms/response_processor.ipynb 1
 import json
@@ -10,6 +10,7 @@ from typing import Dict, Any, Optional
 from rich.console import Console
 from rich.markdown import Markdown
 from ...configs.loader import get_reasoning_config
+import re
 
 # %% ../../../nbs/buddy/backend/llms/response_processor.ipynb 2
 RESET = "\033[0m"
@@ -39,3 +40,82 @@ def show_thinking_footer():
     """Display beautiful thinking footer"""
     if show_thinking:
         print(f"{color_code}╰────────────────────────────────────────────────────────────╯{RESET}")
+
+# %% ../../../nbs/buddy/backend/llms/response_processor.ipynb 3
+class ResponseProcessor:
+    """Handles processing of LLM responses"""
+    
+    def __init__(self):
+        self.console = Console()
+    
+    def process_response(self, response: Any, console: Optional[Console] = None) -> Dict[str, Any]:
+        """Process non-streaming response"""
+        if console is None:
+            console = self.console
+        
+        try:
+            message = response.choices[0].message
+            
+            cleaned_content = ""
+            if hasattr(message, 'reasoning') and message.reasoning:
+                show_thinking_header()
+                console.print(Markdown(message.reasoning))
+                show_thinking_footer()
+            if hasattr(message, 'content') and message.content:
+                content = message.content
+        
+                # Extract <think>...</think> content
+                think_matches = re.findall(r"<think>(.*?)</think>", content, re.DOTALL)
+        
+                # Remove <think>...</think> blocks from original content
+                cleaned_content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL)
+    
+                # Print each <think> block inside the fancy box
+                for think in think_matches:
+                    think = think.strip()
+                    if think:
+                        show_thinking_header()
+                        print(f"{color_code}{think}{RESET}")
+                        show_thinking_footer()
+        
+                # Print main message content
+                if cleaned_content.strip():
+                    console.print(Markdown(cleaned_content.strip()))
+            
+            # Extract tool calls
+            tool_calls = []
+            if hasattr(message, 'tool_calls') and message.tool_calls:
+                tool_calls = self._extract_tool_calls(message.tool_calls)
+            
+            return {
+                "content": cleaned_content,
+                "tool_calls": tool_calls,
+                "usage": getattr(response, 'usage', None),
+                "model": getattr(response, 'model', None)
+            }
+            
+        except Exception as e:
+            console.print(f"[red]Error processing response: {e}[/red]")
+            return {"content": "", "tool_calls": [], "error": str(e)}
+    
+    def _extract_tool_calls(self, tool_calls) -> list:
+        """Extract tool calls from response"""
+        extracted_calls = []
+        
+        for tool_call in tool_calls:
+            try:
+                extracted_call = {
+                    "id": tool_call.id,
+                    "type": tool_call.type,
+                    "function": {
+                        "name": tool_call.function.name,
+                        "arguments": tool_call.function.arguments
+                    }
+                }
+                extracted_calls.append(extracted_call)
+            except Exception as e:
+                print(f"Error extracting tool call: {e}")
+                continue
+        
+        return extracted_calls
+

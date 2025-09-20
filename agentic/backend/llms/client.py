@@ -11,7 +11,7 @@ from rich.console import Console
 from rich.markdown import Markdown
 
 # %% ../../../nbs/buddy/backend/llms/client.ipynb 2
-from ...configs.loader import get_model_config
+from ...configs.loader import get_model_config, get_settings_config
 from .response_processor import ResponseProcessor
 from .streaming_handler import StreamingHandler
 
@@ -33,8 +33,7 @@ class LLMClient:
         
         # Initialize OpenAI client
         self.client = OpenAI(base_url=self.base_url, 
-                             api_key=self.api_key,
-                             timeout=timeout)
+                             api_key=self.api_key)
         
         # Initialize processors
         self.response_processor = ResponseProcessor()

@@ -7,7 +7,7 @@ __all__ = ['get_model_config', 'get_settings_config', 'get_tools_config', 'get_r
 from typing import Dict, Any
 
 # %% ../../nbs/buddy/configs/loader.ipynb 2
-from ..backend.config.manager import get_config_manager
+from .manager import get_config_manager
 
 # %% ../../nbs/buddy/configs/loader.ipynb 3
 def get_model_config() -> Dict[str, Any]:
