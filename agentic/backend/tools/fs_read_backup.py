@@ -5,7 +5,7 @@ __all__ = ['FsReadTool', 'sample_dir_structure', 'test_directory_mode_lists_file
            'test_find_mode_finds_files', 'test_grep_mode_finds_pattern', 'test_invalid_mode_returns_error']
 
 # %% ../../../nbs/buddy/backend/tools/fs_read.backup.ipynb 1
-from .base import Tool
+from ...tools.base import Tool
 from pathlib import Path
 from typing import List, Dict, Any
 import fnmatch

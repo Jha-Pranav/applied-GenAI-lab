@@ -4,8 +4,8 @@
 __all__ = ['TodoTool']
 
 # %% ../../../nbs/buddy/backend/tools/todo.ipynb 1
-from .base import Tool
-from ..schemas import TodoParams, TodoAction
+from ...tools.base import Tool
+from ...schemas import TodoParams, TodoAction
 from typing import Dict, Any, List
 
 class TodoTool(Tool):

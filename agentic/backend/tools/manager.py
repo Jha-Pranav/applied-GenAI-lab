@@ -5,18 +5,18 @@ __all__ = ['ToolManager']
 
 # %% ../../../nbs/buddy/backend/tools/manager.ipynb 1
 from typing import List, Dict, Any
-from .fs_read import FsReadTool
-from .fs_write import FsWriteTool
-from .execute_bash import ExecuteBashTool
-from .task_planner import TaskPlannerTool
-from .task_monitor import TaskMonitorTool
-from .task_executor import TaskExecutorTool
-from .debate_agent import DebateAgentTool
-from .code_interpreter import CodeInterpreterTool
-from .code_quality import CodeQualityTool
-from .doc_generator import DocGeneratorTool
-from .memory import MemoryManagerTool
-from .introspect import IntrospectTool
+from ...tools.fs_read import FsReadTool
+from ...tools.fs_write import FsWriteTool
+from ...tools.execute_bash import ExecuteBashTool
+from ...tools.task_planner import TaskPlannerTool
+from ...tools.task_monitor import TaskMonitorTool
+from ...tools.task_executor import TaskExecutorTool
+from ...tools.debate_agent import DebateAgentTool
+from ...tools.code_interpreter import CodeInterpreterTool
+from ...tools.code_quality import CodeQualityTool
+from ...tools.doc_generator import DocGeneratorTool
+from ...tools.memory import MemoryManagerTool
+from ...tools.introspect import IntrospectTool
 
 # %% ../../../nbs/buddy/backend/tools/manager.ipynb 2
 class ToolManager:

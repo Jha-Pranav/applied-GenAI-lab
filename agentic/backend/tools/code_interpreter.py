@@ -4,8 +4,8 @@
 __all__ = ['CodeInterpreterTool']
 
 # %% ../../../nbs/buddy/backend/tools/code_interpreter.ipynb 1
-from .base import Tool
-from ..schemas import CodeInterpreterParams
+from ...tools.base import Tool
+from ...schemas import CodeInterpreterParams
 import sys
 import io
 from contextlib import redirect_stdout, redirect_stderr

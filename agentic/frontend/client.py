@@ -11,17 +11,17 @@ from openai import OpenAI
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.theme import Theme
-from ..backend.tools.manager import ToolManager
-from ..backend.tools.fs_read import FsReadParams
-from ..backend.tools.fs_write import FsWriteParams
-from ..backend.schemas import ToolCall,  ExecuteBashParams, IntrospectParams, TodoParams
-from ..backend.llm_factory import LLMClient
+from ..tools.manager import ToolManager
+from ..tools.fs_read import FsReadParams
+from ..tools.fs_write import FsWriteParams
+from ..schemas import ToolCall,  ExecuteBashParams, IntrospectParams, TodoParams
+from ..llm_factory import LLMClient
 from pydantic import ValidationError
 from typing import List, Dict, Any, Optional
 
 from ..configs.prompts import get_system_prompt
 from ..configs.loader import get_model_config, get_settings_config, get_tools_config, get_reasoning_config
-# from agentic.backend.tracing import get_tracer
+# from agentic.tracing import get_tracer
 
 # %% ../../nbs/buddy/frontend/client.ipynb 2
 RESET = "\033[0m"

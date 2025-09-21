@@ -12,8 +12,8 @@ from rich.markdown import Markdown
 
 # %% ../../../nbs/buddy/backend/llms/client.ipynb 2
 from ...configs.loader import get_model_config, get_settings_config
-from .response_processor import ResponseProcessor
-from .streaming_handler import StreamingHandler
+from ...llms.response_processor import ResponseProcessor
+from ...llms.streaming_handler import StreamingHandler
 
 # %% ../../../nbs/buddy/backend/llms/client.ipynb 3
 class LLMClient:

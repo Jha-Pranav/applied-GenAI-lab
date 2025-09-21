@@ -4,8 +4,8 @@
 __all__ = ['MemoryManagerTool']
 
 # %% ../../../nbs/buddy/backend/tools/memory.ipynb 1
-from .base import Tool
-from ..schemas import MemoryManagerParams
+from ...tools.base import Tool
+from ...schemas import MemoryManagerParams
 from typing import Dict, Any, List
 
 class MemoryManagerTool(Tool):

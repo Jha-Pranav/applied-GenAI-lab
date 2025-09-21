@@ -10,8 +10,8 @@ import os
 from typing import List, Dict
 from rich.console import Console
 
-from .llm_factory import LLMClient
-from .schemas import Task, ExecutionPlan, AnalysisResult, ComplexityLevel, BuddyTool, ExecutionMode
+from ..llm_factory import LLMClient
+from ..schemas import Task, ExecutionPlan, AnalysisResult, ComplexityLevel, BuddyTool, ExecutionMode
 from ..configs.prompts import AnalyzerPrompts
 
 # %% ../../nbs/buddy/backend/analyzer.ipynb 2
