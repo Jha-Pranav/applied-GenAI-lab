@@ -1,4 +1,4 @@
-from agentic.frontend.client import main
+from agentic.client import main
 
 if __name__ == "__main__":
     main()

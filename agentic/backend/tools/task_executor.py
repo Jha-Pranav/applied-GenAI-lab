@@ -11,7 +11,7 @@ import json
 import hashlib
 import os
 from typing import Dict, Any, List
-from .base import Tool
+from ...tools.base import Tool
 
 class TaskExecutorTool(Tool):
     def __init__(self):
@@ -60,7 +60,7 @@ class TaskExecutorTool(Tool):
     def tool_manager(self):
         """Lazy load tool manager to avoid circular imports"""
         if self._tool_manager is None:
-            from agentic.backend.tools.manager import ToolManager
+            from agentic.tools.manager import ToolManager
             self._tool_manager = ToolManager()
         return self._tool_manager
         

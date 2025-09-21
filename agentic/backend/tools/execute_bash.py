@@ -4,8 +4,8 @@
 __all__ = ['ExecuteBashTool']
 
 # %% ../../../nbs/buddy/backend/tools/execute_bash.ipynb 1
-from .base import Tool
-from ..schemas import ExecuteBashParams
+from ...tools.base import Tool
+from ...schemas import ExecuteBashParams
 import subprocess
 from typing import Dict, Any
 

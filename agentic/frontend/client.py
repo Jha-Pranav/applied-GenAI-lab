@@ -11,17 +11,17 @@ from openai import OpenAI
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.theme import Theme
-from ..backend.tools.manager import ToolManager
-from ..backend.tools.fs_read import FsReadParams
-from ..backend.tools.fs_write import FsWriteParams
-from ..backend.schemas import ToolCall,  ExecuteBashParams, IntrospectParams, TodoParams
-from ..backend.llm_factory import LLMClient
+from ..tools.manager import ToolManager
+from ..tools.fs_read import FsReadParams
+from ..tools.fs_write import FsWriteParams
+from ..schemas import ToolCall,  ExecuteBashParams, IntrospectParams, TodoParams
+from ..llm_factory import LLMClient
 from pydantic import ValidationError
 from typing import List, Dict, Any, Optional
 
 from ..configs.prompts import get_system_prompt
 from ..configs.loader import get_model_config, get_settings_config, get_tools_config, get_reasoning_config
-# from agentic.backend.tracing import get_tracer
+# from agentic.tracing import get_tracer
 
 # %% ../../nbs/buddy/frontend/client.ipynb 2
 RESET = "\033[0m"
@@ -106,7 +106,6 @@ class BuddyClient:
                     executed_calls = self._execute_tool_calls(result["tool_calls"])
                     result["tool_calls"] = executed_calls
 
-                
                 # Add assistant response to history
                 assistant_message = {"role": "assistant", "content": result.get("content", "")}
                 if result.get("tool_calls"):
@@ -310,6 +309,7 @@ class BuddyClient:
         """Validate tool call parameters with Pydantic"""
         try:
             if function_name == "fs_read":
+                print("**"*20, arguments)
                 FsReadParams(**arguments)
             elif function_name == "fs_write":
                 FsWriteParams(**arguments)
@@ -327,7 +327,8 @@ class BuddyClient:
             
         except ValidationError as e:
             error_msg = str(e)
-            if "Input should be 'Line', 'Directory' or 'Search'" in error_msg:
+            print(error_msg)
+            if "Input should be 'discover'or 'extract'" in error_msg:
                 print(f"\n⚠️ Invalid mode for {function_name}. Use 'Line' to read files, 'Directory' to list directories, 'Search' to find patterns.")
             else:
                 print(f"\n⚠️ Validation error for {function_name}: {e}")

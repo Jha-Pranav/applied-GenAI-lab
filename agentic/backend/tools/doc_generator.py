@@ -4,8 +4,8 @@
 __all__ = ['DocGeneratorTool']
 
 # %% ../../../nbs/buddy/backend/tools/doc_generator.ipynb 1
-from .base import Tool
-from ..schemas import DocumentationGeneratorParams
+from ...tools.base import Tool
+from ...schemas import DocumentationGeneratorParams
 from pathlib import Path
 from typing import Dict, Any
 

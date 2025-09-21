@@ -4,8 +4,8 @@
 __all__ = ['DebateAgentTool']
 
 # %% ../../../nbs/buddy/backend/tools/debate_agent.ipynb 1
-from .base import Tool
-from ..schemas import DebateAgentParams
+from ...tools.base import Tool
+from ...schemas import DebateAgentParams
 from typing import Dict, Any, List
 
 class DebateAgentTool(Tool):

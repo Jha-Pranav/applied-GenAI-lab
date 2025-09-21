@@ -142,32 +142,7 @@ class LLMClient:
         message = response.choices[0].message
 
         # Don't save thinking in the history
-        
-        cleaned_content = ""
-        if hasattr(message, 'reasoning') and message.reasoning:
-            show_thinking_header()
-            console.print(Markdown(message.reasoning))
-            show_thinking_footer()
-        if hasattr(message, 'content') and message.content:
-            content = message.content
-    
-            # Extract <think>...</think> content
-            think_matches = re.findall(r"<think>(.*?)</think>", content, re.DOTALL)
-    
-            # Remove <think>...</think> blocks from original content
-            cleaned_content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL)
 
-            # Print each <think> block inside the fancy box
-            for think in think_matches:
-                think = think.strip()
-                if think:
-                    show_thinking_header()
-                    print(f"{color_code}{think}{RESET}")
-                    show_thinking_footer()
-    
-            # Print main message content
-            if cleaned_content.strip():
-                console.print(Markdown(cleaned_content.strip()))
  
         if hasattr(message, 'tool_calls') and message.tool_calls:
             tool_calls = []

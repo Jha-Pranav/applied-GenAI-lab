@@ -4,8 +4,8 @@
 __all__ = ['FsWriteTool']
 
 # %% ../../../nbs/buddy/backend/tools/fs_write.backup.ipynb 1
-from .base import Tool
-from ..schemas import  WriteCommand
+from ...tools.base import Tool
+from ...schemas import  WriteCommand
 from pathlib import Path
 import difflib
 import shutil

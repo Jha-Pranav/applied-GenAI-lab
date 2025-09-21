@@ -4,8 +4,8 @@
 __all__ = ['IntrospectTool']
 
 # %% ../../../nbs/buddy/backend/tools/introspect.ipynb 1
-from .base import Tool
-from ..schemas import IntrospectParams, IntrospectAction, CritiqueResponse
+from ...tools.base import Tool
+from ...schemas import IntrospectParams, IntrospectAction, CritiqueResponse
 from typing import Dict, Any, List
 
 class IntrospectTool(Tool):

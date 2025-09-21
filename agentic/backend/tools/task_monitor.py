@@ -8,7 +8,7 @@ __all__ = ['TaskMonitorTool']
 Task Monitor Tool - Tracks task execution and validates success criteria
 """
 from typing import Dict, Any, List
-from .base import Tool
+from ...tools.base import Tool
 
 class TaskMonitorTool(Tool):
     def __init__(self):

@@ -4,8 +4,8 @@
 __all__ = ['CodeQualityTool']
 
 # %% ../../../nbs/buddy/backend/tools/code_quality.ipynb 1
-from .base import Tool
-from ..schemas import RepoQualityAnalyzerParams, QualityAnalysisResponse
+from ...tools.base import Tool
+from ...schemas import RepoQualityAnalyzerParams, QualityAnalysisResponse
 from pathlib import Path
 import fnmatch
 from typing import Dict, Any, List

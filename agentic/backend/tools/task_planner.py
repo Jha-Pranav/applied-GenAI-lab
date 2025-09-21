@@ -11,8 +11,8 @@ import json
 import hashlib
 import os
 from typing import Dict, Any
-from .base import Tool
-from ..analyzer import AgentTaskAnalyzer
+from ...tools.base import Tool
+from ...analyzer import AgentTaskAnalyzer
 
 class TaskPlannerTool(Tool):
     def __init__(self):
