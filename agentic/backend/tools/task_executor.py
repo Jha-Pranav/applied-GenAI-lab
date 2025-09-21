@@ -64,7 +64,7 @@ class TaskExecutorTool(Tool):
             self._tool_manager = ToolManager()
         return self._tool_manager
         
-    def get_tool_schema(self) -> Dict[str, Any]:
+    def get_parameters_schema(self) -> Dict[str, Any]:
         return {
             "type": "function",
             "function": {

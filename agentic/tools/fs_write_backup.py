@@ -15,7 +15,7 @@ from typing import Dict, Any
 
 # %% ../../nbs/buddy/backend/tools/fs_write.backup.ipynb 2
 class FsWriteTool(Tool):
-    def get_tool_schema(self) -> Dict[str, Any]:
+    def get_parameters_schema(self) -> Dict[str, Any]:
         """Return the OpenAI-compatible schema for fs_write."""
         return {
                 "type": "function",

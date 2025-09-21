@@ -9,7 +9,7 @@ from ...schemas import DebateAgentParams
 from typing import Dict, Any, List
 
 class DebateAgentTool(Tool):
-    def get_tool_schema(self) -> Dict[str, Any]:
+    def get_parameters_schema(self) -> Dict[str, Any]:
         """Return the OpenAI-compatible schema for debate_agent."""
         return {
                 "type": "function",

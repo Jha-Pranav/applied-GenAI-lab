@@ -12,7 +12,7 @@ class TodoTool(Tool):
     def __init__(self):
         self.task_plans = {}  # Store task plans: {task: List[Dict]}
 
-    def get_tool_schema(self) -> Dict[str, Any]:
+    def get_parameters_schema(self) -> Dict[str, Any]:
         """Return the OpenAI-compatible schema for todo."""
         return {
                 "type": "function",

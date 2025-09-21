@@ -12,7 +12,7 @@ import fnmatch
 
 # %% ../../nbs/buddy/backend/tools/fs_read.backup.ipynb 2
 class FsReadTool(Tool):
-    def get_tool_schema(self) -> Dict[str, Any]:
+    def get_parameters_schema(self) -> Dict[str, Any]:
         """Return the OpenAI-compatible schema for fs_read."""
         return {
             "type": "function",

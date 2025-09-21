@@ -38,7 +38,7 @@ class ToolManager:
 
     def get_tools(self, requested_tools: List[str]) -> List[Dict]:
         """Convert requested tools to OpenAI function calling format."""
-        return [self.tools[tool].get_tool_schema() for tool in requested_tools if tool in self.tools]
+        return [self.tools[tool].get_parameters_schema() for tool in requested_tools if tool in self.tools]
 
     def execute_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Execute the specified tool with given arguments."""

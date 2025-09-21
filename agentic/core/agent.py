@@ -12,7 +12,6 @@ from ..llms.client import LLMClient
 from ..configs.prompt_manager import get_system_prompt
 from ..configs.loader import get_model_config, get_settings_config
 
-
 # %% ../../nbs/buddy/backend/core/agent.ipynb 2
 @dataclass
 class Message:
@@ -108,13 +107,13 @@ class Agent:
     
     def _get_available_tools(self) -> List[Dict]:
         """Get OpenAI-formatted tools for the configured tool names"""
-        from ..tools.core import ToolManager
+        from agentic.tools.manager import ToolManager
         tool_manager = ToolManager()
         return tool_manager.get_tools(self.config.tools)
     
     def _execute_tool_calls(self, tool_calls: List[Dict]) -> List[Dict]:
         """Execute tool calls using registered tools"""
-        from ..tools.display import ToolExecutionDisplay
+        from agentic.tools.display import ToolExecutionDisplay
         display = ToolExecutionDisplay()
         
         executed_calls = []
