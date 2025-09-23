@@ -3,25 +3,21 @@
 # %% auto 0
 __all__ = ['logger', 'ToolCallMode', 'FsReadOperation', 'FsReadParams', 'FsReadTool']
 
-# %% ../../nbs/buddy/backend/tools/filesystem/fs_read.ipynb 2
+# %% ../../nbs/buddy/backend/tools/filesystem/fs_read.ipynb 1
 import os
 import re
 import time
 import logging
 from pathlib import Path
 from typing import Dict, List, Any, Optional
-from fuzzywuzzy import fuzz
 import fnmatch
 import json
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from pydantic import BaseModel, field_validator, Field, ValidationInfo
+from pydantic import BaseModel, field_validator, Field, ValidationInfo, ValidationError
 from enum import Enum
-import git
-import mimetypes
-from functools import lru_cache
+from collections import defaultdict
 
 # Set up logging (configurable level)
-logging.basicConfig(level=logging.DEBUG)  # Default to DEBUG; can be overridden
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 class ToolCallMode(str, Enum):
@@ -30,189 +26,111 @@ class ToolCallMode(str, Enum):
 
 class FsReadOperation(BaseModel):
     mode: ToolCallMode
-    path: str = Field(..., description="Specific file or directory path to operate on, e.g., '/project/src' or 'app.py'.")
-    query: Optional[str] = Field(None, description="Search query for fuzzy matching (DISCOVER) or regex/substring (EXTRACT). Required for EXTRACT.")
-    file_pattern: str = Field("*.py|*.go|*.rs|*.java|*.js|*.ts|*.cpp|*.c|*.h|*.cs", description="Glob filter for files, e.g., '*.py' or '*.go|*.rs'.")
-    max_depth: Optional[int] = Field(10, description="Max recursion depth for DISCOVER (default 10).")
-    context_lines: Optional[int] = Field(3, description="Lines around each match in EXTRACT (default 3).")
-    regex_mode: Optional[bool] = Field(True, description="True treats query as regex in EXTRACT; false for substring.")
-    start_line: Optional[int] = Field(1, description="Fallback start line for EXTRACT (default 1).")
-    end_line: Optional[int] = Field(-1, description="Fallback end line for EXTRACT (-1 = file end).")
-    max_files: Optional[int] = Field(100, description="Max files to scan in DISCOVER (default 100).")
-    limit_results: Optional[int] = Field(20, description="Max results from DISCOVER (default 5).")
-    simple_mode: Optional[bool] = Field(True, description="Disable scoring for simple glob-based discovery in DISCOVER mode.")
-    minimal_output: Optional[bool] = Field(True, description="Return minimal output (path, name, data only) for LLM consumption.")
+    path: str = Field(..., description="Specific file or directory path to operate on, e.g., 'src' or 'app.py'. Relative to project root if not absolute.")
+    query: Optional[str] = Field(None, description="Search query as regex for DISCOVER (file name) or EXTRACT (content). Required for EXTRACT.")
+    file_pattern: str = Field("*", description="Glob filter for files, e.g., '*.py' or '*.go|*.rs'.")
+    max_depth: Optional[int] = Field(10, ge=1, description="Maximum recursion depth for DISCOVER mode. Value SHOULD BE >= 1")
+    max_files: Optional[int] = Field(50, ge=1, description="Maximum number of files to return in DISCOVER mode")
 
     @field_validator("path")
     @classmethod
     def validate_path(cls, value: str, info: ValidationInfo) -> str:
-        """Validate and normalize the path, ensuring it exists and is within the project root if applicable.
-
-        Args:
-            value: Path to validate.
-            info: Validation context containing optional repo information.
-
-        Returns:
-            Normalized path string.
-
-        Raises:
-            ValueError: If path is invalid or outside project root.
-        """
-        if not value:
-            value = os.getcwd()
-            logger.info(f"Path empty; defaulting to project root: {value}")
-        path_obj = Path(value)
-        if not path_obj.exists():
-            raise ValueError(f"Path {value} does not exist")
-        repo = info.context.get("repo") if info.context is not None else None
-        if repo and not str(path_obj).startswith(repo.working_dir):
-            raise ValueError(f"Path {value} is outside the project root {repo.working_dir}")
-        return str(path_obj)
+        try:
+            project_root = os.getcwd()
+            if not value:
+                value = project_root
+                logger.info(f"Path empty; defaulting to project root: {value}")
+            path_obj = Path(value).resolve()
+            if not path_obj.exists():
+                raise ValueError(f"Path {value} does not exist")
+            if not str(path_obj).startswith(project_root):
+                raise ValueError(f"Path {value} is outside project root; explicit permission is required to access external paths.")
+            return str(path_obj)
+        except Exception as e:
+            logger.error(f"Path validation failed: {str(e)}")
+            raise ValueError(f"Invalid path: {str(e)}")
 
     @field_validator("query")
     @classmethod
     def validate_query(cls, value: Any, info: ValidationInfo) -> Any:
-        """Ensure query is provided for EXTRACT mode and normalize for DISCOVER.
-
-        Args:
-            value: Query value to validate.
-            info: Validation context.
-
-        Returns:
-            Validated query or empty string for DISCOVER mode.
-
-        Raises:
-            ValueError: If query is missing in EXTRACT mode.
-        """
         mode = info.data.get("mode")
         if mode == ToolCallMode.EXTRACT and value is None:
-            raise ValueError("Query is required for extract mode to perform regex or substring matching.")
+            raise ValueError("Query is required for extract mode to perform regex matching.")
         if mode == ToolCallMode.DISCOVER and value is None:
             return ""
+        if value:
+            try:
+                re.compile(value)
+            except re.error as e:
+                logger.error(f"Invalid regex query: {value} ({str(e)})")
+                raise ValueError(f"Invalid regex query: {value} ({str(e)})")
         return value
 
     @field_validator("file_pattern")
     @classmethod
-    def validate_file_pattern(cls, value: Any, info: ValidationInfo) -> Any:
-        """Validate file_pattern as a valid glob and set mode-specific defaults.
-
-        Args:
-            value: File pattern to validate.
-            info: Validation context.
-
-        Returns:
-            Validated file pattern.
-
-        Raises:
-            ValueError: If file_pattern is invalid.
-        """
-        mode = info.data.get("mode")
-        if value is None:
-            return "*.py|*.go|*.rs|*.java|*.js|*.ts|*.cpp|*.c|*.h|*.cs" if mode == ToolCallMode.EXTRACT else "*"
+    def validate_file_pattern(cls, value: Any) -> Any:
         if not isinstance(value, str):
             raise ValueError("file_pattern must be a string")
         try:
             for pattern in value.split('|'):
                 fnmatch.fnmatch("test.txt", pattern)
         except Exception as e:
+            logger.error(f"Invalid glob pattern: {value} ({str(e)})")
             raise ValueError(f"Invalid glob pattern: {value} ({str(e)})")
         return value
 
 class FsReadParams(BaseModel):
     operations: List[FsReadOperation]
 
-class FsReadTool:
-    def __init__(self, log_level: str = "INFO"):
-        """Initialize the FsReadTool with Git integration and exclusion patterns.
+from .base import BaseTool, ToolMetadata, ToolCategory
 
-        Args:
-            log_level: Logging level (e.g., 'DEBUG', 'INFO', 'WARNING'). Defaults to 'INFO'.
-        """
+class FsReadTool(BaseTool):
+    def __init__(self, log_level: str = "INFO"):
+        metadata = ToolMetadata(
+            name="fs_read",
+            description="Read filesystem with regex search and exclusions, supporting file discovery or content extraction",
+            category=ToolCategory.FILESYSTEM
+        )
+        super().__init__(metadata)
         logging.getLogger().setLevel(getattr(logging, log_level, logging.INFO))
-        self.repo = None
-        self.gitignore_patterns = []
-        self.git_status_cache = {}
-        self.common_exclusions = [
+        self.project_root = os.getcwd()
+        self.exclusion_patterns = [
             ".*", "*.pyc", "*.o", "*.obj", "*.class", "*.exe", "*.dll", "*.so",
             "*.lock", "node_modules/*", "dist/*", "build/*", "__pycache__/*",
             "*.bin", "*.zip", "*.tar.gz", "*.log"
         ]
+        self._load_gitignore()
 
-        try:
-            self.repo = git.Repo(os.getcwd(), search_parent_directories=True)
-            self.gitignore_patterns = self._load_gitignore()
-            self._batch_load_git_status()
-        except (git.InvalidGitRepositoryError, git.NoSuchPathError):
-            logger.debug("No Git repository found; proceeding without Git integration.")
-
-    def _load_gitignore(self) -> List[str]:
-        """Load .gitignore patterns recursively from repo root and subdirs.
-
-        Returns:
-            List of exclusion patterns including .gitignore and common exclusions.
-        """
-        patterns = self.common_exclusions.copy()
-        try:
-            repo_root = Path(self.repo.working_dir)
-            for gitignore in repo_root.rglob(".gitignore"):
-                try:
-                    with open(gitignore, 'r', encoding='utf-8', errors='ignore') as f:
-                        for line in f:
-                            line = line.strip()
-                            if line and not line.startswith('#'):
-                                rel_path = str(gitignore.parent.relative_to(repo_root)) + '/' + line
-                                if rel_path.startswith('./'):
-                                    rel_path = rel_path[2:]
-                                patterns.append(rel_path)
-                except (OSError, UnicodeDecodeError) as e:
-                    logger.debug(f"Failed to read {gitignore}: {e}")
-        except (OSError, Exception) as e:
-            logger.warning(f"Failed to load .gitignore patterns: {e}; using common exclusions only.")
-        return patterns
-
-    def _batch_load_git_status(self):
-        """Batch load Git status for all files, capturing index and working tree status."""
-        try:
-            status_output = self.repo.git.status('--porcelain', '-u', 'all')
-            for line in status_output.split('\n'):
-                if line.strip():
-                    parts = line.split(maxsplit=1)
-                    if len(parts) >= 2:
-                        status_code = parts[0]  # e.g., " M", "AM", "??"
-                        rel_path = parts[1].strip()
-                        self.git_status_cache[rel_path] = {
-                            "index": status_code[0] if status_code[0] != " " else None,
-                            "working_tree": status_code[1] if len(status_code) > 1 and status_code[1] != " " else None
-                        }
-        except (OSError, git.GitCommandError) as e:
-            logger.warning(f"Failed to batch-load Git status: {e}; falling back to per-file.")
-
-    def refresh_git_status(self):
-        """Refresh the Git status cache."""
-        self.git_status_cache.clear()
-        self._batch_load_git_status()
+    def _load_gitignore(self) -> None:
+        """Load .gitignore patterns to exclude files."""
+        gitignore_path = Path(self.project_root) / ".gitignore"
+        if gitignore_path.exists():
+            try:
+                with open(gitignore_path, 'r', encoding='utf-8', errors='ignore') as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and not line.startswith('#'):
+                            self.exclusion_patterns.append(line)
+            except (OSError, UnicodeDecodeError) as e:
+                logger.debug(f"Failed to read {gitignore_path}: {e}")
 
     def _is_excluded(self, rel_path: str) -> bool:
-        """Check if a path is excluded by .gitignore or common patterns.
+        """Check if a path matches exclusion patterns."""
+        return any(fnmatch.fnmatch(rel_path, p) for p in self.exclusion_patterns)
 
-        Args:
-            rel_path: Relative path to check.
+    def _get_exclusion_weight(self, rel_path: str) -> int:
+        """Assign a weight to prioritize non-excluded files."""
+        if rel_path.startswith('.'):
+            return 5
+        lower_path = rel_path.lower()
+        if any(term in lower_path for term in ['venv', 'env', 'node_modules', 'dist', 'build']):
+            return 1
+        if any(term in lower_path for term in ['__pycache__', '.cache', 'temp']):
+            return 2
+        return 3  # Default for other excluded
 
-        Returns:
-            True if the path is excluded, False otherwise.
-        """
-        return any(fnmatch.fnmatch(rel_path, p) for p in self.gitignore_patterns)
-
-    def _get_file_info(self, path: str, lightweight: bool = True) -> Dict[str, Any]:
-        """Retrieve file metadata, respecting .gitignore and detecting binary files.
-
-        Args:
-            path: File path to analyze.
-            lightweight: If True, skip detailed metadata like line counts.
-
-        Returns:
-            Dictionary with file metadata or error details.
-        """
+    def _get_file_info(self, path: str) -> Dict[str, Any]:
+        """Get metadata about a file, including size and binary status."""
         path_obj = Path(path)
         if not path_obj.exists():
             return {"error": "File not found"}
@@ -222,354 +140,179 @@ class FsReadTool:
         except OSError as e:
             return {"error": f"Stat failed: {e}"}
 
-        rel_path = path_obj.name
-        if self.repo:
-            try:
-                rel_path = str(path_obj.relative_to(self.repo.working_dir))
-            except ValueError:
-                pass
+        rel_path = os.path.relpath(path, self.project_root)
         if self._is_excluded(rel_path):
-            return {"error": "Excluded by .gitignore or common patterns"}
+            return {"error": "Excluded by patterns"}
 
         file_size = stat.st_size
-        mtime = stat.st_mtime
-        recency_boost = 1.0 if time.time() - mtime < 86400 else 0.5
+        is_binary = False
+        lines = 0
 
-        mime_type, _ = mimetypes.guess_type(path)
-        is_binary = mime_type is None or not mime_type.startswith('text/')
+        try:
+            with open(path, 'rb') as f:
+                chunk = f.read(2048)  # Larger sample for better binary detection
+                if b'\0' in chunk:
+                    is_binary = True
+                else:
+                    try:
+                        chunk.decode('utf-8')
+                        with open(path, 'r', encoding='utf-8', errors='ignore') as f_text:
+                            lines = sum(1 for _ in f_text)
+                    except UnicodeDecodeError:
+                        is_binary = True
+        except (OSError, UnicodeDecodeError) as e:
+            logger.debug(f"Error checking file {path}: {str(e)}")
+            is_binary = True
 
-        file_info = {
+        return {
             "size": file_size,
             "is_binary": is_binary,
             "file_type": path_obj.suffix.lower(),
             "is_large": file_size > 1024 * 1024,
-            "mtime": mtime,
-            "recency_boost": recency_boost,
-            "git_status": None,
+            "lines": lines if not is_binary else 0
         }
 
-        if self.repo:
-            rel_path = os.path.relpath(path, self.repo.working_dir)
-            file_info["git_status"] = self.git_status_cache.get(rel_path, {"index": None, "working_tree": None})
-            if file_info["git_status"].get("index") in ["M", "A"] or file_info["git_status"].get("working_tree") in ["M", "A"]:
-                file_info["recency_boost"] = 1.0
+    def _build_tree(self, rel_paths: List[str]) -> str:
+        """Build a tree representation of file paths."""
+        tree = defaultdict(lambda: defaultdict(dict))
+        for rel_path in rel_paths:
+            parts = rel_path.split(os.sep)
+            current = tree
+            for part in parts[:-1]:  # Dirs
+                current = current[part]
+            if parts:  # File
+                current[parts[-1]] = {}  # Empty dict for file
 
-        if lightweight or is_binary:
-            return file_info
+        def print_tree(node, prefix: str = "") -> List[str]:
+            lines = []
+            items = sorted(node.keys())
+            for i, item in enumerate(items):
+                is_last = i == len(items) - 1
+                connector = "└── " if is_last else "├── "
+                lines.append(prefix + connector + item)
+                sub_prefix = prefix + ("    " if is_last else "│   ")
+                lines.extend(print_tree(node[item], sub_prefix))
+            return lines
 
-        try:
-            if file_size < 10 * 1024 * 1024:
-                with open(path, 'r', encoding='utf-8', errors='ignore') as f:
-                    file_info["lines"] = sum(1 for _ in f)
-            else:
-                with open(path, 'r', encoding='utf-8', errors='ignore') as f:
-                    sample_lines = sum(1 for _, _ in zip(range(10000), f))
-                    file_info["lines"] = int((file_size / (f.tell() or 1)) * sample_lines)
-        except (OSError, UnicodeDecodeError) as e:
-            logger.debug(f"Failed to count lines for {path}: {e}")
-            file_info["is_binary"] = True
+        tree_lines = print_tree(tree)
+        return "\n".join(tree_lines) if tree_lines else "No files found"
 
-        return file_info
-
-    @lru_cache(maxsize=100)
-    def _cache_query(self, query: str) -> str:
-        """Cache lowercase query for efficient reuse.
-
-        Args:
-            query: Query string to cache.
-
-        Returns:
-            Lowercase query string.
-        """
-        return query.lower() if query else ""
-
-    def clear_cache(self):
-        """Clear the query cache."""
-        self._cache_query.cache_clear()
-
-    def _score_file_content(self, file_path: str, query_lower: str) -> float:
-        """Score file content for relevance to query.
-
-        Args:
-            file_path: Path to the file to score.
-            query_lower: Lowercase query string.
-
-        Returns:
-            Fuzzy matching score (0-100).
-        """
-        try:
-            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                content = f.read(10 * 1024).lower()  # Read 10KB for better coverage
-            return fuzz.partial_ratio(query_lower, content)
-        except (OSError, UnicodeDecodeError) as e:
-            logger.debug(f"Failed to score {file_path}: {e}")
-            return 0.0
-
-    def _discover_files(self, path: str, file_pattern: str, query: str, max_depth: int, max_files: int = 100, limit_results: int = 5, timeout: float = 10.0, simple_mode: bool = False, minimal_output: bool = False) -> List[Dict]:
-        """Discover relevant files using scandir and optional scoring.
-
-        Args:
-            path: Directory path to scan.
-            file_pattern: Glob pattern for file filtering.
-            query: Search query for fuzzy matching.
-            max_depth: Maximum recursion depth.
-            max_files: Maximum number of files to process.
-            limit_results: Maximum number of results to return.
-            timeout: Maximum time (seconds) for discovery.
-            simple_mode: If True, disable scoring and sort by path.
-            minimal_output: If True, return only path and name in results.
-
-        Returns:
-            List of dictionaries with file details or error messages.
-        """
+    def _discover_files(self, path: str, file_pattern: str, query: str, max_depth: int, max_files: int) -> str:
+        """Discover files matching patterns and query, returning a tree structure."""
         start_time = time.time()
         path_obj = Path(path)
         if not path_obj.is_dir():
-            return [{"error": f"Path {path} is not a directory for discovery"}]
+            return json.dumps({"error": "Path is not a directory for discovery"})
 
-        query_lower = self._cache_query(query)
+        query_pattern = re.compile(query, re.IGNORECASE) if query else None
         patterns = [fnmatch.translate(p) for p in file_pattern.split('|')]
         pattern_regexes = [re.compile(p) for p in patterns]
         candidates = []
 
-        def _collect_with_scandir(dir_path: str, current_depth: int, file_count: List[int]) -> None:
-            if current_depth > max_depth or file_count[0] >= max_files or time.time() - start_time > timeout:
+        def _collect_with_walk(dir_path: str, current_depth: int, file_count: List[int]) -> None:
+            if current_depth > max_depth or file_count[0] >= max_files:
                 return
             try:
-                with os.scandir(dir_path) as entries:
-                    for entry in entries:
-                        if time.time() - start_time > timeout:
-                            logger.warning(f"Discovery timeout after {timeout}s")
-                            return
-                        rel_path = entry.name
-                        if self.repo:
-                            try:
-                                rel_path = str(Path(entry.path).relative_to(self.repo.working_dir))
-                            except ValueError:
-                                pass
-                        if self._is_excluded(rel_path):
+                for entry in os.scandir(dir_path):
+                    rel_path = entry.name
+                    try:
+                        rel_path = str(Path(entry.path).relative_to(self.project_root))
+                    except ValueError:
+                        pass
+                    if self._is_excluded(rel_path):
+                        continue
+                    if entry.is_file() and any(p.match(entry.name) for p in pattern_regexes):
+                        if query_pattern and not query_pattern.search(entry.name):
                             continue
-                        if any(p.match(entry.name) for p in pattern_regexes) and entry.is_file() and Path(entry.path).exists():
-                            file_info = self._get_file_info(entry.path, lightweight=True)
-                            if "error" in file_info or file_info.get("is_binary"):
-                                continue
-                            base_score = 0
-                            if query and not simple_mode:
-                                name_score = fuzz.partial_ratio(query_lower, entry.name.lower())
-                                base_score = name_score
-                            git_boost = 20 if not simple_mode and file_info["git_status"] and file_info["git_status"].get("index") in ["M", "A"] else 10 if not simple_mode and file_info["git_status"] and file_info["git_status"].get("working_tree") == "?" else 0
-                            mtime_boost = 10 if not simple_mode and file_info["recency_boost"] > 0.8 else 0
-                            candidates.append({
-                                "path": entry.path,
-                                "name": entry.name,
-                                "type": "file",
-                                "score": base_score + git_boost + mtime_boost,
-                                "file_info": file_info
-                            })
-                            file_count[0] += 1
-                            if file_count[0] >= max_files:
-                                logger.info(f"Reached max files: {max_files}")
-                                return
-                        if entry.is_dir():
-                            _collect_with_scandir(entry.path, current_depth + 1, file_count)
+                        weight = 10 if not self._is_excluded(rel_path) else self._get_exclusion_weight(rel_path)
+                        candidates.append((entry.path, weight))
+                        file_count[0] += 1
+                    if entry.is_dir():
+                        _collect_with_walk(entry.path, current_depth + 1, file_count)
             except (OSError, PermissionError) as e:
                 logger.debug(f"Scan error in {dir_path}: {e}")
 
         file_count = [0]
-        _collect_with_scandir(str(path_obj), 0, file_count)
+        _collect_with_walk(str(path_obj), 0, file_count)
 
         if not candidates:
-            return [{"error": "No files matched the criteria"}]
+            return json.dumps({"error": "No files matched the criteria"})
 
-        if query and not simple_mode:
-            with ThreadPoolExecutor(max_workers=min(8, os.cpu_count() or 4)) as executor:
-                futures = {executor.submit(self._score_file_content, c["path"], query_lower): c for c in candidates}
-                for future in as_completed(futures):
-                    content_score = future.result()
-                    if content_score > 0:
-                        idx = candidates.index(futures[future])
-                        candidates[idx]["score"] = max(candidates[idx]["score"], content_score)
+        candidates.sort(key=lambda x: (-x[1], x[0]))
+        selected_paths = [p for p, w in candidates[:max_files]]
+        rel_paths = [os.path.relpath(p, path) for p in selected_paths]
+        tree_str = self._build_tree(rel_paths)
 
-        if not simple_mode:
-            candidates.sort(key=lambda x: x["score"], reverse=True)
-        else:
-            candidates.sort(key=lambda x: x["path"])
+        logger.info(f"Discovered {len(selected_paths)} files in {time.time() - start_time:.2f}s")
+        return json.dumps({"data": tree_str})
 
-        found = []
-        for item in candidates[:limit_results]:
-            result = {"path": item["path"], "name": item["name"]}
-            if not minimal_output:
-                result.update({
-                    "type": item["type"],
-                    "score": item["score"],
-                    "git_status": item["file_info"].get("git_status", {"index": None, "working_tree": None}),
-                    "recency": item["file_info"]["mtime"]
-                })
-            found.append(result)
-
-        logger.info(f"Discovered {len(found)} files in {time.time() - start_time:.2f}s (processed {file_count[0]})")
-        return found
-
-    def _extract_content(self, path: str, query: str, file_pattern: str, context_lines: int, regex_mode: bool, start_line: int, end_line: int, minimal_output: bool = False) -> str:
-        """Extract content from files or directories with context-aware snippets.
-
-        Args:
-            path: File or directory path to process.
-            query: Search query for matching.
-            file_pattern: Glob pattern for file filtering.
-            context_lines: Number of context lines around matches.
-            regex_mode: True for regex matching, False for substring.
-            start_line: Starting line for extraction.
-            end_line: Ending line for extraction (-1 for file end).
-            minimal_output: If True, omit metadata in output.
-
-        Returns:
-            JSON string with snippets or file content, or error message.
-        """
+    def _extract_content(self, path: str, query: str, file_pattern: str) -> str:
+        """Extract content from files matching query and pattern."""
         path_obj = Path(path)
         if not path_obj.exists():
             return json.dumps({"error": f"Path {path} does not exist"})
 
-        if path_obj.is_dir():
+        if path_obj.is_file():
+            rel_path = os.path.relpath(path, self.project_root)
+            if self._is_excluded(rel_path):
+                return json.dumps({"error": f"Path {path} is excluded by patterns"})
+            content = self._extract_from_file(path, query)
+            return json.dumps({"data": content})
+        else:
             snippets = []
-            discovered = self._discover_files(path, file_pattern, query, 1, max_files=10, limit_results=10, simple_mode=True, minimal_output=minimal_output)
-            for file_item in discovered:
-                if "error" not in file_item and isinstance(file_item.get("path"), str) and Path(file_item["path"]).is_file():
-                    rel_path = file_item["path"]
-                    if self.repo:
-                        try:
-                            rel_path = str(Path(file_item["path"]).relative_to(self.repo.working_dir))
-                        except ValueError:
-                            pass
-                    if self._is_excluded(rel_path):
-                        continue
-                    file_info = self._get_file_info(file_item["path"], lightweight=False)
-                    if "error" in file_info or file_info.get("is_binary"):
-                        continue
-                    file_snip = self._extract_from_file(file_item["path"], query, context_lines, regex_mode, start_line, end_line, minimal_output)
-                    if file_snip and not file_snip.startswith("[Binary or invalid file") and not file_snip.startswith("Error reading file"):
-                        snippets.append({"file": file_item["path"], "snippet": file_snip})
+            for root, dirs, files in os.walk(path):
+                for file in files:
+                    if any(fnmatch.fnmatch(file, p) for p in file_pattern.split('|')):
+                        full_path = os.path.join(root, file)
+                        rel_path = os.path.relpath(full_path, self.project_root)
+                        if not self._is_excluded(rel_path):
+                            file_snip = self._extract_from_file(full_path, query)
+                            if file_snip and not file_snip.startswith("[Binary") and not file_snip.startswith("Error"):
+                                snippets.append({"file": full_path, "snippet": file_snip})
             if not snippets:
                 return json.dumps({"error": f"No valid text files matched the criteria in {path}"})
-            content = json.dumps(snippets)
-            content_lines = content.split('\n')
-            byte_count = 0
-            truncated_content = []
-            for line in content_lines:
-                byte_count += len(line.encode('utf-8')) + 1
-                if byte_count > 16 * 1024:
-                    truncated_content.append("... [truncated]")
-                    break
-                truncated_content.append(line)
-            return '\n'.join(truncated_content)
-        else:
-            rel_path = path
-            if self.repo:
-                try:
-                    rel_path = str(path_obj.relative_to(self.repo.working_dir))
-                except ValueError:
-                    pass
-            if self._is_excluded(rel_path):
-                return json.dumps({"error": f"Path {path} is excluded by .gitignore or common patterns"})
-            return self._extract_from_file(path, query, context_lines, regex_mode, start_line, end_line, minimal_output)
-
-    def _extract_from_file(self, file_path: str, query: str, context_lines: int, regex_mode: bool, start_line: int, end_line: int, minimal_output: bool = False) -> str:
-        """Extract matching lines from a file with surrounding context.
-
-        Args:
-            file_path: Path to the file to process.
-            query: Search query for matching.
-            context_lines: Number of context lines around matches.
-            regex_mode: True for regex matching, False for substring.
-            start_line: Starting line for processing.
-            end_line: Ending line for processing (-1 for file end).
-            minimal_output: If True, omit metadata in output.
-
-        Returns:
-            Formatted string with matches, context, and optional metadata.
-        """
-        if not isinstance(file_path, str) or not Path(file_path).is_file():
-            return f"[Invalid file path: {file_path}]"
-
-        file_info = self._get_file_info(file_path, lightweight=False)
-        if "error" in file_info or file_info.get("is_binary"):
-            return f"[Binary or invalid file: {file_info.get('size', 0)} bytes]"
-
-        try:
-            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                matches = []
-                pattern = None
-                if query and regex_mode:
-                    pattern = re.compile(query, re.IGNORECASE | re.MULTILINE)
-                elif query:
-                    query_lower = self._cache_query(query)
-
-                current_line = start_line
-                byte_count = 0
-                line_buffer = []
-                for line_num, line in enumerate(f, start_line):
-                    if current_line > end_line and end_line != -1:
-                        break
-                    line_stripped = line.rstrip()
-                    byte_count += len(line_stripped.encode('utf-8'))
-                    if byte_count > 16 * 1024:
-                        break
-                    line_buffer.append((current_line, line_stripped))
-                    if len(line_buffer) > 2 * context_lines + 1:
-                        line_buffer.pop(0)
-
-                    matched = False
-                    if pattern:
-                        if pattern.search(line):
-                            matched = True
-                    elif query:
-                        if query_lower in line.lower():
-                            matched = True
-
-                    if matched:
-                        context_start = max(1, current_line - context_lines)
-                        context_end = current_line + context_lines + 1
-                        context_lines_content = [f"Line {ln}: {text}" for ln, text in line_buffer if context_start <= ln < context_end]
-                        matches.append({
-                            "line_number": current_line,
-                            "content": line_stripped,
-                            "context": "\n".join(context_lines_content)
-                        })
-                    current_line += 1
-
-                snippets = []
-                for match in matches:
-                    snippet = f"Line {match['line_number']}: {match['content']}\n{match['context']}\n"
-                    snippets.append(snippet)
-                content = '\n--- Match ---\n'.join(snippets) if matches else "No matches found; fallback content truncated."
-        except (OSError, UnicodeDecodeError) as e:
-            return f"Error reading file: {str(e)}"
-
-        if minimal_output:
+            content = json.dumps({"data": snippets})
+            if len(content) > 16 * 1024:
+                content = content[:16 * 1024] + "... [truncated]"
             return content
 
-        git_info = file_info['git_status'] or {"index": None, "working_tree": None}
-        metadata = (
-            f"\n--- File Info: {file_info['size']} bytes, "
-            f"{file_info.get('lines', 0)} lines, "
-            f"Git: index={git_info['index']}, working_tree={git_info['working_tree']} ---"
-        )
-        return content + metadata
+    def _extract_from_file(self, file_path: str, query: str) -> str:
+        """Extract content from a single file with regex matching."""
+        file_info = self._get_file_info(file_path)
+        if "error" in file_info:
+            return f"Error: {file_info['error']}"
+        if file_info["is_binary"]:
+            return f"[Binary file: {file_info['size']} bytes]"
+        try:
+            pattern = re.compile(query, re.IGNORECASE | re.MULTILINE) if query else None
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                lines = f.readlines()
+            if not query:
+                content = "".join(lines)
+                if len(content) > 16 * 1024:
+                    content = content[:16 * 1024] + "... [truncated]"
+                return content + f"\n--- File Info: {file_info['lines']} lines, {file_info['size']} bytes ---"
+            matches = []
+            for line_num, line in enumerate(lines, 1):
+                if pattern.search(line):
+                    matches.append(f"Line {line_num}: {line.strip()}")
+            if not matches:
+                return "No matches found"
+            content = "\n".join(matches)
+            if len(content) > 16 * 1024:
+                content = content[:16 * 1024] + "... [truncated]"
+            return content + f"\n--- File Info: {file_info['lines']} lines, {file_info['size']} bytes ---"
+        except (OSError, UnicodeDecodeError) as e:
+            logger.error(f"Error reading file {file_path}: {str(e)}")
+            return f"Error reading file: {str(e)}"
 
     def get_parameters_schema(self, verbose: bool = True) -> Dict[str, Any]:
-        """Return JSON schema for LLM integration, with optional minimal descriptions.
-
-        Args:
-            verbose: If True, include detailed descriptions; if False, return minimal schema.
-
-        Returns:
-            JSON schema dictionary.
-        """
+        """Return OpenAI-compatible schema for the tool."""
         schema = {
             "type": "function",
             "function": {
                 "name": "fs_read",
-                "description": "Discover relevant files or extract context-aware snippets. Optimized for large repos with .gitignore support." if verbose else "",
+                "description": "Discover files in tree structure or extract regex-matched snippets. Uses exclusions with fallback sorting." if verbose else "",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -581,15 +324,15 @@ class FsReadTool:
                                     "mode": {
                                         "type": "string",
                                         "enum": [mode.value for mode in ToolCallMode],
-                                        "description": "Select 'discover' to list files or 'extract' to pull snippets." if verbose else ""
+                                        "description": "Select 'discover' to list files in tree or 'extract' to pull snippets." if verbose else ""
                                     },
                                     "path": {
                                         "type": "string",
-                                        "description": "File or directory path, e.g., '/project/src' or 'app.py'." if verbose else ""
+                                        "description": "File or directory path relative to project root, e.g., 'src' or 'app.py'." if verbose else ""
                                     },
                                     "query": {
                                         "type": "string",
-                                        "description": "Search term for fuzzy (DISCOVER) or regex/substring (EXTRACT). Required for EXTRACT." if verbose else ""
+                                        "description": "Regex for fuzzy file name (DISCOVER) or content (EXTRACT). Required for EXTRACT." if verbose else ""
                                     },
                                     "file_pattern": {
                                         "type": "string",
@@ -597,39 +340,11 @@ class FsReadTool:
                                     },
                                     "max_depth": {
                                         "type": "integer",
-                                        "description": "Max dir recursion for DISCOVER (default 10)." if verbose else ""
-                                    },
-                                    "context_lines": {
-                                        "type": "integer",
-                                        "description": "Lines around matches in EXTRACT (default 3)." if verbose else ""
-                                    },
-                                    "regex_mode": {
-                                        "type": "boolean",
-                                        "description": "True for regex in EXTRACT; false for substring (default True)." if verbose else ""
-                                    },
-                                    "start_line": {
-                                        "type": "integer",
-                                        "description": "Start line for EXTRACT (default 1)." if verbose else ""
-                                    },
-                                    "end_line": {
-                                        "type": "integer",
-                                        "description": "End line for EXTRACT (-1 = file end)." if verbose else ""
+                                        "description": "Maximum recursion depth for DISCOVER mode (default: 10)." if verbose else ""
                                     },
                                     "max_files": {
                                         "type": "integer",
-                                        "description": "Max files to scan in DISCOVER (default 100)." if verbose else ""
-                                    },
-                                    "limit_results": {
-                                        "type": "integer",
-                                        "description": "Max results from DISCOVER (default 5)." if verbose else ""
-                                    },
-                                    "simple_mode": {
-                                        "type": "boolean",
-                                        "description": "Disable scoring for simple glob-based discovery (default False)." if verbose else ""
-                                    },
-                                    "minimal_output": {
-                                        "type": "boolean",
-                                        "description": "Return minimal output (path, name, data only) for LLM (default False)." if verbose else ""
+                                        "description": "Maximum number of files to return in DISCOVER mode (default: 50)." if verbose else ""
                                     }
                                 },
                                 "required": ["mode", "path"]
@@ -640,25 +355,44 @@ class FsReadTool:
                 }
             }
         }
-        return schema
+        return schema["function"]["parameters"]
 
-    def execute(self, params: FsReadParams) -> Dict[str, Any]:
-        """Execute operations with chainable JSON output.
+    def execute(self, **kwargs) -> Dict[str, Any]:
+        """Execute filesystem read operations with robust error handling."""
+        try:
+            if 'params' in kwargs:
+                params = kwargs['params']
+            else:
+                if 'operations' not in kwargs and ('mode' in kwargs or 'path' in kwargs):
+                    kwargs = {'operations': [kwargs]}
+                params = FsReadParams(**kwargs)
+            result = self._execute_internal(params)
+            # Simplify response for single successful operation
+            if len(params.operations) == 1 and result["success"] and not result["error"]:
+                op_result = result["data"][0]
+                return {
+                    "success": True,
+                    "data": json.loads(op_result["data"])["data"] if op_result["data"] else None,
+                    "error": None,
+                    "metadata": {"processed_files": len(result["data"])}
+                }
+            return result
+        except ValidationError as e:
+            logger.error(f"Input validation failed: {str(e)}")
+            return {"success": False, "data": [], "error": {"type": "ValidationError", "message": str(e)}, "metadata": {}}
+        except AttributeError as e:
+            logger.error(f"Attribute error in execution: {str(e)}")
+            return {"success": False, "data": [], "error": {"type": "AttributeError", "message": str(e)}, "metadata": {}}
+        except Exception as e:
+            logger.critical(f"Unexpected execution error: {str(e)}")
+            return {"success": False, "data": [], "error": {"type": "UnexpectedError", "message": str(e)}, "metadata": {}}
 
-        Args:
-            params: FsReadParams object containing operations to execute.
-
-        Returns:
-            Dictionary with results, errors, and metadata.
-        """
+    def _execute_internal(self, params: FsReadParams) -> Dict[str, Any]:
+        """Internal execution logic for batch operations."""
         results = []
-        git_detected = self.repo is not None
         total_processed = 0
 
         for op in params.operations:
-            # Validate operation with repo context
-            op = op.model_copy()  # Create a copy to avoid modifying the original
-            op = op.model_validate(op.model_dump(), context={"repo": self.repo})
             mode = op.mode.value
             path = op.path
             output_data = None
@@ -666,19 +400,18 @@ class FsReadTool:
 
             try:
                 if mode == "discover":
-                    output_data = self._discover_files(
-                        path, op.file_pattern, op.query or "", op.max_depth,
-                        op.max_files, op.limit_results, simple_mode=op.simple_mode,
-                        minimal_output=op.minimal_output
-                    )
-                    total_processed += len([x for x in output_data if "error" not in x])
+                    output_data = self._discover_files(path, op.file_pattern, op.query or "", op.max_depth, op.max_files)
+                    total_processed += op.max_files  # Approximate
                 elif mode == "extract":
-                    output_data = self._extract_content(
-                        path, op.query, op.file_pattern, op.context_lines,
-                        op.regex_mode, op.start_line, op.end_line, op.minimal_output
-                    )
+                    output_data = self._extract_content(path, op.query, op.file_pattern)
                     total_processed += 1
-            except (OSError, UnicodeDecodeError, ValueError) as e:
+            except ValueError as e:
+                if "outside project root" in str(e):
+                    error = {"type": "PermissionError", "message": str(e)}
+                else:
+                    error = {"type": "ValueError", "message": str(e)}
+                logger.error(f"Error in {mode} on {path}: {str(e)}")
+            except (OSError, UnicodeDecodeError, re.error) as e:
                 error = {"type": type(e).__name__, "message": str(e)}
                 logger.error(f"Error in {mode} on {path}: {str(e)}")
 
@@ -689,13 +422,11 @@ class FsReadTool:
                 "error": error
             })
 
+        overall_success = all(r.get("error") is None for r in results)
+        overall_error = None if overall_success else {"type": "BatchError", "message": "Some operations failed—check individual errors."}
         return {
-            "success": all(r.get("error") is None for r in results),
+            "success": overall_success,
             "data": results,
-            "error": None if all(r.get("error") is None for r in results) else {"type": "BatchError", "message": "Some operations failed—check individual errors."},
-            "metadata": {
-                "git_detected": git_detected,
-                "processed_files": total_processed,
-                "description": "Results ready for chaining: Use the returned 'data[].path' and 'data[].snippet' fields as inputs for the next processing step."
-            }
+            "error": overall_error,
+            "metadata": {"processed_files": total_processed}
         }

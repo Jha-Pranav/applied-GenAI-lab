@@ -165,6 +165,7 @@ class StreamingHandler:
         
             return {"content": full_content,
                     "tool_calls": tool_calls, 
+                    "finish_reason":chunk.choices[0].finish_reason,
                     "usage": getattr(response, 'usage', None),
                     "model": getattr(response, 'model', None)}
         except Exception as e:

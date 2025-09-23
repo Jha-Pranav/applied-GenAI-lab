@@ -5,7 +5,7 @@ __all__ = ['TaskPlannerTool']
 
 # %% ../../nbs/buddy/backend/tools/planning/task_planner.ipynb 1
 """
-Task Planner BaseTool - Complete Task Analyzer Integration with Caching
+Task Planner Tool - Complete Task Analyzer Integration with Caching
 """
 import json
 import hashlib
@@ -183,4 +183,3 @@ class TaskPlannerTool(BaseTool):
                 "plan_summary": f"❌ Failed to create execution plan: {e}",
                 "next_steps": "Try breaking down the request into simpler parts or check the request format."
             }
-

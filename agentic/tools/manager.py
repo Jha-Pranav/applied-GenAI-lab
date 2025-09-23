@@ -39,25 +39,25 @@ class ToolManager:
             FsWriteTool(),
             
             # System tools
-            # ExecuteBashTool(),
+            ExecuteBashTool(),
             
-            # Analysis tools
+            # # Analysis tools
             CodeInterpreterTool(),
-            CodeQualityTool(),
+            # CodeQualityTool(),
             
-            # Intelligence tools
-            IntrospectTool(),
-            DebateAgentTool(),
-            MemoryTool(),
+            # # Intelligence tools
+            # IntrospectTool(),
+            # DebateAgentTool(),
+            # MemoryManagerTool(),
             
-            # Planning tools
-            TaskPlannerTool(),
-            TaskExecutorTool(),
-            TaskMonitorTool(),
+            # # Planning tools
+            # TaskPlannerTool(),
+            # TaskExecutorTool(),
+            # TaskMonitorTool(),
 
             
-            # Utility tools
-            DocGeneratorTool(),
+            # # Utility tools
+            # DocGeneratorTool(),
         ]
         
         for tool in default_tools:
