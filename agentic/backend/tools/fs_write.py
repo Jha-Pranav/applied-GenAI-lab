@@ -95,7 +95,7 @@ class FsWriteTool:
         pass
 
     @staticmethod
-    def get_tool_schema() -> Dict[str, Any]:
+    def get_parameters_schema() -> Dict[str, Any]:
         """Return the OpenAI-compatible schema for fs_write."""
         return {
             "type": "function",

@@ -1,14 +1,12 @@
 [model]
-name = "qwen3:14b"
-#name = "gpt-oss:20b"
-#url = "http://192.168.29.147:11500/v1"
-url = "http://localhost:11434/v1"
+#name = "qwen3:14b"
+name = "gpt-oss:20b"
+url = "http://192.168.29.147:11500/v1"
+#url = "http://localhost:11434/v1"
 api_key = "ollama"
 timeout = 300.0
 
 [settings]
-temperature = 0.7
-max_tokens = 10000
 auto_approve = true
 stream = true
 

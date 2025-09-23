@@ -55,7 +55,7 @@ class TaskPlannerTool(Tool):
             print(f"💾 Cached plan to {cache_path}")
         except Exception as e:
             print(f"⚠️  Cache save failed: {e}")
-    def get_tool_schema(self) -> Dict[str, Any]:
+    def get_parameters_schema(self) -> Dict[str, Any]:
         return {
             "type": "function",
             "function": {

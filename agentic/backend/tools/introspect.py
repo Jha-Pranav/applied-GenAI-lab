@@ -9,7 +9,7 @@ from ...schemas import IntrospectParams, IntrospectAction, CritiqueResponse
 from typing import Dict, Any, List
 
 class IntrospectTool(Tool):
-    def get_tool_schema(self) -> Dict[str, Any]:
+    def get_parameters_schema(self) -> Dict[str, Any]:
         """Return the OpenAI-compatible schema for introspect."""
         return {
                 "type": "function",

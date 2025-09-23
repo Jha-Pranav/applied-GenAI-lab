@@ -12,7 +12,7 @@ class Tool(ABC):
     """Abstract base class for all tools."""
     
     @abstractmethod
-    def get_tool_schema(self) -> Dict[str, Any]:
+    def get_parameters_schema(self) -> Dict[str, Any]:
         """Return the OpenAI-compatible tool schema."""
         pass
     

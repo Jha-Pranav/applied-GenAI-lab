@@ -12,7 +12,7 @@ class MemoryManagerTool(Tool):
     def __init__(self):
         self.memory = []  # Store conversation history
 
-    def get_tool_schema(self) -> Dict[str, Any]:
+    def get_parameters_schema(self) -> Dict[str, Any]:
         """Return the OpenAI-compatible schema for memory_manager."""
         return {
                 "type": "function",

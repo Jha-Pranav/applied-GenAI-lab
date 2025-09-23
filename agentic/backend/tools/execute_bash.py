@@ -10,7 +10,7 @@ import subprocess
 from typing import Dict, Any
 
 class ExecuteBashTool(Tool):
-    def get_tool_schema(self) -> Dict[str, Any]:
+    def get_parameters_schema(self) -> Dict[str, Any]:
         """Return the OpenAI-compatible schema for execute_bash."""
         return {
                 "type": "function",

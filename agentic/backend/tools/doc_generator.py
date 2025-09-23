@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Dict, Any
 
 class DocGeneratorTool(Tool):
-    def get_tool_schema(self) -> Dict[str, Any]:
+    def get_parameters_schema(self) -> Dict[str, Any]:
         """Return the OpenAI-compatible schema for doc_generator."""
         return {
                 "type": "function",

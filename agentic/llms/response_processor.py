@@ -90,6 +90,7 @@ class ResponseProcessor:
             return {
                 "content": cleaned_content,
                 "tool_calls": tool_calls,
+                "finish_reason":response.choices[0].finish_reason,
                 "usage": getattr(response, 'usage', None),
                 "model": getattr(response, 'model', None)
             }

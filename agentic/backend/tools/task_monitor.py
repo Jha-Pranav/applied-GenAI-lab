@@ -16,7 +16,7 @@ class TaskMonitorTool(Tool):
         self.active_tasks = {}
         self.completed_tasks = {}
         
-    def get_tool_schema(self) -> Dict[str, Any]:
+    def get_parameters_schema(self) -> Dict[str, Any]:
         return {
             "type": "function",
             "function": {

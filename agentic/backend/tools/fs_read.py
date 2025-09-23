@@ -394,7 +394,7 @@ class FsReadTool:
         )
         return content + metadata
 
-    def get_tool_schema(self) -> Dict[str, Any]:
+    def get_parameters_schema(self) -> Dict[str, Any]:
         """Detailed schema for LLMs."""
         return {
             "type": "function",
