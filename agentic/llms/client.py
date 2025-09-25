@@ -82,8 +82,8 @@ class LLMClient:
             # Optional: Set a tracking URI and an experiment
             mlflow.set_tracking_uri("http://localhost:5000")
             mlflow.set_experiment("tool_test")
-
-            return self.client.chat.completions.create(**completion_params)
+            with mlflow.start_run():
+                return self.client.chat.completions.create(**completion_params)
         except Exception as e:
             raise RuntimeError(f"LLM completion failed: {e}")
     

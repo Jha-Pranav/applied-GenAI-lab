@@ -19,7 +19,6 @@ class TaskPlannerTool(BaseTool):
         super().__init__()
         self.cache_dir = "/tmp/buddy_cache"
         os.makedirs(self.cache_dir, exist_ok=True)
-    
     def _get_cache_key(self, request: str) -> str:
         """Generate cache key from request"""
         return hashlib.md5(request.encode()).hexdigest()

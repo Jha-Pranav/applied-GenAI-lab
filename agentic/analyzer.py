@@ -38,9 +38,7 @@ class AgentTaskAnalyzer:
             
             print(f"✅ Created {len(tasks)} tasks")
             
-            print("🔄 Step 3: Creating execution plan...")
-            # Step 3: Create execution plan
-            execution_plan = self._create_execution_plan(tasks)
+
             
             # Step 4: Identify required Buddy tools
             buddy_tools = list(set([tool for task in tasks for tool in task.buddy_tools]))
@@ -327,55 +325,6 @@ class AgentTaskAnalyzer:
             print(f"❌ Task decomposition failed: {e}")
             return [framework_task] + self._create_simple_task(user_input)
 
-    def _create_execution_plan(self, tasks: List[Task]) -> ExecutionPlan:
-        """Create execution plan for Buddy"""
-        # Build dependency graph
-        task_map = {task.id: task for task in tasks}
-        
-        # Find execution phases
-        phases = []
-        remaining = tasks.copy()
-        
-        while remaining:
-            # Find tasks with no unmet dependencies
-            ready = []
-            for task in remaining:
-                deps_met = all(dep not in [t.id for t in remaining] for dep in task.dependencies)
-                if deps_met:
-                    ready.append(task)
-            
-            if not ready:
-                ready = [remaining[0]]  # Break cycles
-            
-            # Separate parallel and sequential tasks
-            parallel = [t for t in ready if t.execution_mode == ExecutionMode.PARALLEL]
-            sequential = [t for t in ready if t.execution_mode == ExecutionMode.SEQUENTIAL]
-            
-            if parallel:
-                phases.append([t.id for t in parallel])
-            
-            for task in sequential:
-                phases.append([task.id])
-            
-            # Remove processed tasks
-            for task in ready:
-                remaining.remove(task)
-        
-        # Find parallel opportunities
-        parallel_groups = [phase for phase in phases if len(phase) > 1]
-        
-        # Find critical path (simplified)
-        critical_path = [phase[0] for phase in phases]
-        
-        # Count total actions
-        total_actions = sum(len(task.actions) for task in tasks)
-        
-        return ExecutionPlan(
-            sequential_phases=phases,
-            parallel_groups=parallel_groups,
-            critical_path=critical_path,
-            total_actions=total_actions
-        )
 
     def _define_success_criteria(self, user_input: str, tasks: List[Task]) -> List[str]:
         """Define project success criteria"""
