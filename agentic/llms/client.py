@@ -74,16 +74,16 @@ class LLMClient:
         
         try:
             
-            import mlflow
+            # import mlflow
             
-            # Enable auto-tracing for OpenAI
-            mlflow.openai.autolog()
+            # # Enable auto-tracing for OpenAI
+            # mlflow.openai.autolog()
             
-            # Optional: Set a tracking URI and an experiment
-            mlflow.set_tracking_uri("http://localhost:5000")
-            mlflow.set_experiment("tool_test")
-            with mlflow.start_run():
-                return self.client.chat.completions.create(**completion_params)
+            # # Optional: Set a tracking URI and an experiment
+            # mlflow.set_tracking_uri("http://localhost:5000")
+            # mlflow.set_experiment("tool_test")
+            # with mlflow.start_run():
+            return self.client.chat.completions.create(**completion_params)
         except Exception as e:
             raise RuntimeError(f"LLM completion failed: {e}")
     

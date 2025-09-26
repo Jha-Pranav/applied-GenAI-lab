@@ -53,17 +53,53 @@ Here are the features you’ll want your benchmarking setup to test:
 9. **User experience / interpretability** — clarity of responses, error messages, prompts, logs etc.
 
 ---
-
-## Datasets / Benchmarks to Use
-
-Here are existing datasets / benchmarks that align (partially or largely) with these dimensions, which you can repurpose or adapt for your CLI Q product evaluation:
-
-| Name                                                                         | What it Tests / Relevant for CLI‑Q Type                                                                                                             | Key Features / Why It Helps                                                                                                                                       |
-| ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **CRAG (Comprehensive RAG Benchmark)**                                       | Very relevant: it’s directly aimed at RAG (retrieval augmented generation) systems, includes multiple domains & question types. ([OPEA Project][1]) | You can use this to test answer quality, retrieval, possibly some function/API calling (mock APIs) to simulate tool invocation. Good for correctness / reasoning. |
-| **InfiAgent‑DA‑Bench**                                                       | Data analysis queries over CSVs. Useful if your CLI agent is expected to answer questions about tabular data or do analytics, etc. ([InfiAgent][2]) | Tests grounding (CSV), correctness, ability to parse structured data. Might be a component of your suite.                                                         |
-| **Terminal‑Bench**                                                           | CLI/terminal‑style tasks: seems specifically designed for evaluating agents in CLI/terminal environments. ([Terminal-Bench][3])                     | This likely matches your use case quite closely: testing CLI workflows, command usage, error handling in terminal. Very helpful.                                  |
-| **ALMITA Dataset (customer‑support / tool‑augmented conversational agents)** | Evaluates API/tool usage, conversation, correctness of replies and APIs called. ([Simple Science][4])                                               | Even though not exactly CLI, the infrastructure of deciding when to call a tool or respond is similar. Useful for tool invocation evaluation.                     |
-| **Tiny QA Benchmark++ (TQB++)**                                              | Smaller QA dataset, useful for testing correctness / regression / smoke‑testing. ([GitHub][5])                                                      | Helps in catching small mistakes quickly; good for continuous integration.                                                                                        |
+Here's a **consolidated list** of all the datasets we've discussed so far, grouped by **task type**, with descriptions and sources:
 
 ---
+
+## 🧠 A. **Project-Level Code Generation Datasets**
+
+| Dataset                    | Description                                                                                                                                                        | Source / Link                                                                                                            |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| **ProjectEval**            | Benchmark for *end-to-end project generation* tasks. Each task has natural language prompts, checklists, optional skeletons, and test suites.                      | [📄 Paper](https://arxiv.org/abs/2503.07010) · [💻 GitHub (planned)](https://projecteval.github.io)                      |
+| **CoderEval**              | 460 programming tasks (Python & Java) with varying context dependencies — larger than isolated functions, but not full projects.                                   | [📄 Paper](https://arxiv.org/abs/2302.00288)                                                                             |
+| **TransCoder / TransRepo** | Repository-level code translation tasks (e.g. Java → C#), includes structure, comments, and build config — not gen-from-scratch but useful for project-scale eval. | [📄 TransCoder](https://arxiv.org/abs/2006.03511) · [📄 TransRepo](https://arxiv.org/abs/2501.16050)                     |
+| **OpenCodeInstruct**       | Massive multi-task dataset with problems, solutions, and test cases. Mostly function-level, but supports composing tasks into projects.                            | [📄 Paper](https://arxiv.org/abs/2504.04030) · [🤗 HF Dataset](https://huggingface.co/datasets/Intel/open-code-instruct) |
+
+---
+
+## 🧪 B. **Bug Fixing / Software Maintenance (SWE-bench Family)**
+
+| Dataset                    | Description                                                                                                                    | Source / Link                                                                                                             |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| **SWE-bench**              | ~2.3K GitHub issues with test cases and patches. Models must generate a patch to fix the issue and pass the test suite.        | [🌐 Website](https://www.swebench.com) · [🤗 Dataset](https://huggingface.co/datasets/princeton-nlp/SWE-bench)            |
+| **SWE-bench_Lite**         | Smaller, faster-to-evaluate version (534 issues).                                                                              | [Same source as above](https://www.swebench.com/SWE-bench/guides/datasets/)                                               |
+| **SWE-bench_Verified**     | Human-curated subset (~500) with verified issue/patch pairs and reliable test coverage. Used by Amazon Q Developer and others. | [🤗 Dataset](https://huggingface.co/datasets/princeton-nlp/SWE-bench_Verified)                                            |
+| **SWE-bench_Multilingual** | SWE-bench extension for multiple programming languages (e.g., Java, JS, TS).                                                   | [🌐 Info](https://www.swebench.com/multilingual)                                                                          |
+| **SWE-bench_Multimodal**   | Tasks with UI elements/screenshots (i.e. multimodal inputs).                                                                   | [🌐 Info](https://www.swebench.com/SWE-bench/guides/datasets/)                                                            |
+| **SWE-PolyBench**          | Multilingual repo-level benchmark with multiple task types (bug fix, feature add, refactoring). Created by Amazon Science.     | [📄 Paper](https://arxiv.org/abs/2504.08703) · [🤗 Dataset](https://huggingface.co/datasets/amazon-science/swe-polybench) |
+
+---
+
+## 🔍 C. **RAG / Retrieval & Knowledge Benchmarks (Used by Amazon Q Business)**
+
+| Dataset                         | Description                                                                                                             | Source / Link                                                                                           |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| **KILT**                        | Unified benchmark for knowledge-intensive NLP tasks (QA, fact-checking, etc.) using Wikipedia as retrieval base.        | [📄 Paper](https://arxiv.org/abs/2009.02252) · [📁 GitHub](https://github.com/facebookresearch/KILT)    |
+| **RAGChecker**                  | Tests hallucination and attribution for RAG models. Measures grounding vs. hallucination. Used in Amazon Q’s RAG evals. | [📄 Paper](https://arxiv.org/abs/2310.03659) · [📁 GitHub](https://github.com/sileod/rag-checker)       |
+| **BBQ (Bias Benchmark for QA)** | Evaluates social bias in QA models using ambiguous/disambiguated questions.                                             | [📁 GitHub](https://github.com/nyu-mll/BBQ) · [🤗 Dataset](https://huggingface.co/datasets/nyu-mll/BBQ) |
+| **OpenAI Moderation Dataset**   | Dataset used to test model refusal/safety performance. Amazon Q Business uses this to evaluate content moderation.      | [📁 GitHub](https://github.com/openai/openai-content-moderation)                                        |
+
+---
+
+## 📌 Summary by Task Type
+
+| Task Type                     | Datasets                                            |
+| ----------------------------- | --------------------------------------------------- |
+| **Project Generation**        | ProjectEval, CoderEval, TransRepo, OpenCodeInstruct |
+| **Bug Fixing / Maintenance**  | SWE-bench, SWE-bench_Verified, SWE-PolyBench        |
+| **Multilingual / Multimodal** | SWE-bench_Multilingual, SWE-bench_Multimodal        |
+| **Bias / Safety / RAG**       | KILT, RAGChecker, BBQ, OpenAI Moderation            |
+
+---
+
