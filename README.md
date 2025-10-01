@@ -106,19 +106,47 @@ Demonstrate that **powerful agentic AI systems** can be run efficiently on local
 
 ## 🚀 Quick Start
 
+Here’s a clearer and more polished version of your **Installation** instructions:
+
+---
+
 ### Installation
 
-```bash
-# Clone repository
-git clone <repository-url>
-cd applied-GenAI-lab
+1. **Install [Ollama](https://ollama.com/):**
+   Follow the instructions on the [official Ollama website](https://ollama.com/download) to install it for your operating system.
 
-# Install dependencies
-uv sync
+2. **Pull the Ollama Reasoning Model:**
+   Once Ollama is installed, pull the reasoning model:
 
-# Run the assistant
-uv run main.py
-```
+   ```bash
+   ollama pull <reasoning-model>
+   ```
+
+3. **Install [uv](https://github.com/astral-sh/uv):**
+   `uv` is a fast Python package manager. You can install it with:
+
+   ```bash
+   pip install uv
+   ```
+
+4. **Clone the repository and install dependencies:**
+
+   ```bash
+   git clone [<repository-url>](https://github.com/Jha-Pranav/applied-GenAI-lab.git)
+   cd applied-GenAI-lab
+
+   # Install dependencies
+   uv sync
+   ```
+
+5. **Run the assistant:**
+
+   ```bash
+   uv run main.py
+   ```
+
+---
+
 
 ### Configuration
 
@@ -127,7 +155,7 @@ The system uses `agentic/configs/config.toml` for configuration:
 ```toml
 [model]
 name = "qwen3:14b"
-url = "http://192.168.29.147:11500/v1/chat/completions"
+url = "http://localhost:11434/v1"
 api_key = "ollama"
 ```
 # 🔄 Buddy AI System - Complete Execution Flow Diagram
