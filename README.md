@@ -103,13 +103,6 @@ Demonstrate that **powerful agentic AI systems** can be run efficiently on local
 
 ---
 
-## 🧪 Coming Soon
-
-* Persistent memory and context tracking
-* Reinforcement learning from human/AI and tool feedback
-* GUI frontend for real-time visibility and control
-* Evaluation for agent benchmarking
-
 
 ## 🚀 Quick Start
 
@@ -891,13 +884,10 @@ plan = await planner_main("Build microservices platform")
 
 ## 🔮 Future Enhancements
 
-### Planned Features
-- [ ] Web interface for remote access
-- [ ] Multi-user support with authentication
-- [ ] Plugin marketplace for custom tools
-- [ ] Advanced workflow automation
-- [ ] Integration with external APIs
-- [ ] Enhanced security sandboxing
+* Persistent memory and context tracking
+* Reinforcement learning from human/AI and tool feedback
+* GUI frontend for real-time visibility and control
+* Evaluation for agent benchmarking
 
 ### Extension Points
 - Custom tool development
