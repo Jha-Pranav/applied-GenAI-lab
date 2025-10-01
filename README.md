@@ -258,7 +258,7 @@ graph TD
     class K5,K8,Y,FF,NN,PP,TT,VV decision
     class DD,OO,QQ,WW error
     class EE,JJ,KK success
-
+```
 ## 🔍 Detailed Component Flows
 
 ### 1. Complexity Analysis Flow
