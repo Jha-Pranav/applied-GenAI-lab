@@ -7,6 +7,7 @@ __all__ = ['logger', 'ExecuteBashParams', 'ExecuteBashTool']
 from .base import BaseTool, ToolMetadata, ToolCategory
 
 import subprocess
+import os
 from typing import Dict, Any, Optional
 from pydantic import BaseModel, ValidationError
 import logging
@@ -54,10 +55,63 @@ class ExecuteBashTool(BaseTool):
             logger.error(f"Schema generation failed: {e}")
             return {}
 
+    def _check_permissions(self, command: str, working_dir: Optional[str] = None) -> bool:
+        """Check if command requires elevated permissions and prompt user"""
+        
+        # Commands that typically require sudo
+        sudo_commands = ['sudo', 'apt', 'yum', 'dnf', 'systemctl', 'service', 'mount', 'umount', 'chmod +x', 'chown']
+        
+        # Check if command needs sudo
+        needs_sudo = any(cmd in command.lower() for cmd in sudo_commands)
+        
+        # Check if writing to system directories
+        system_dirs = ['/usr', '/etc', '/var', '/opt', '/root']
+        if working_dir and any(working_dir.startswith(sdir) for sdir in system_dirs):
+            needs_sudo = True
+            
+        # Check if command writes to system locations
+        if any(f'> {sdir}' in command or f'>> {sdir}' in command for sdir in system_dirs):
+            needs_sudo = True
+            
+        if needs_sudo:
+            print(f"⚠️  Command may require elevated permissions: {command}")
+            response = input("Do you want to proceed? (y/N): ").strip().lower()
+            return response in ['y', 'yes']
+            
+        return True
+    
+    def _handle_permission_error(self, command: str, error: str) -> Dict[str, Any]:
+        """Handle permission denied errors by suggesting solutions"""
+        
+        if "permission denied" in error.lower() or "operation not permitted" in error.lower():
+            print(f"❌ Permission denied for command: {command}")
+            print("💡 Possible solutions:")
+            print("   1. Run with sudo (if system command)")
+            print("   2. Check file/directory permissions")
+            print("   3. Ensure you own the target files/directories")
+            
+            response = input("Try with sudo? (y/N): ").strip().lower()
+            if response in ['y', 'yes']:
+                sudo_command = f"sudo {command}"
+                print(f"🔄 Retrying with: {sudo_command}")
+                return {"retry_command": sudo_command}
+                
+        return {"no_retry": True}
+
     def execute(self, **kwargs) -> Dict[str, Any]:
         try:
             params = ExecuteBashParams(**kwargs)
+            
+            # Check permissions before execution
+            if not self._check_permissions(params.command, params.working_dir):
+                return {
+                    "success": False, 
+                    "error": "Command execution cancelled by user due to permission requirements"
+                }
+            
             shell = params.shell or "/bin/bash"
+            
+            # First attempt
             result = subprocess.run(
                 params.command,
                 shell=True,
@@ -67,13 +121,40 @@ class ExecuteBashTool(BaseTool):
                 cwd=params.working_dir,
                 env={**os.environ, **(params.env_vars or {})} if params.env_vars else None
             )
+            
+            # Check for permission errors and offer retry
+            if result.returncode != 0 and result.stderr:
+                retry_info = self._handle_permission_error(params.command, result.stderr)
+                
+                if "retry_command" in retry_info:
+                    # Retry with sudo
+                    retry_result = subprocess.run(
+                        retry_info["retry_command"],
+                        shell=True,
+                        capture_output=params.capture_output,
+                        text=True,
+                        timeout=params.timeout,
+                        cwd=params.working_dir,
+                        env={**os.environ, **(params.env_vars or {})} if params.env_vars else None
+                    )
+                    
+                    return {
+                        "success": retry_result.returncode == 0,
+                        "stdout": retry_result.stdout,
+                        "stderr": retry_result.stderr,
+                        "exit_status": retry_result.returncode,
+                        "summary": params.summary or f"Executed command with sudo: {retry_info['retry_command']}",
+                        "retried_with_sudo": True
+                    }
+            
             return {
-                "success": True,
+                "success": result.returncode == 0,
                 "stdout": result.stdout,
                 "stderr": result.stderr,
                 "exit_status": result.returncode,
                 "summary": params.summary or f"Executed command: {params.command}"
             }
+            
         except subprocess.TimeoutExpired as e:
             logger.warning(f"Command timed out: {params.command}")
             return {"success": False, "error": f"Command timed out after {params.timeout} seconds"}
@@ -86,3 +167,4 @@ class ExecuteBashTool(BaseTool):
         except Exception as e:
             logger.error(f"Unexpected execution error: {str(e)}")
             return {"success": False, "error": f"Unexpected error: {str(e)}"}
+

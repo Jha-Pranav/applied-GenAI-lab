@@ -22,7 +22,7 @@ crewai install
 
 **Add your `OPENAI_API_KEY` into the `.env` file**
 
-- Modify `src/debate/config/agents.yaml` to define your agents
+- Modify `src/debate/config/agent.yaml` to define your agents
 - Modify `src/debate/config/tasks.yaml` to define your tasks
 - Modify `src/debate/crew.py` to add your own logic, tools and specific args
 - Modify `src/debate/main.py` to add custom inputs for your agents and tasks
@@ -41,7 +41,7 @@ This example, unmodified, will run the create a `report.md` file with the output
 
 ## Understanding Your Crew
 
-The debate Crew is composed of multiple AI agents, each with unique roles, goals, and tools. These agents collaborate on a series of tasks, defined in `config/tasks.yaml`, leveraging their collective skills to achieve complex objectives. The `config/agents.yaml` file outlines the capabilities and configurations of each agent in your crew.
+The debate Crew is composed of multiple AI agents, each with unique roles, goals, and tools. These agents collaborate on a series of tasks, defined in `config/tasks.yaml`, leveraging their collective skills to achieve complex objectives. The `config/agent.yaml` file outlines the capabilities and configurations of each agent in your crew.
 
 ## Support
 

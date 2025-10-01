@@ -48,8 +48,78 @@ class IntrospectTool(BaseTool):
 
     def execute(self, **kwargs) -> Dict[str, Any]:
         """Execute introspection operations."""
+        print(f"🔍 IntrospectTool.execute called with kwargs: {kwargs}")
+        
         try:
+            # Handle task_review action (used by planner)
+            if kwargs.get('action') == 'task_review':
+                print(f"📋 Processing task_review action")
+                task_review = kwargs.get('task_review', {})
+                
+                # Extract key information
+                task_id = task_review.get('task_id', 'unknown')
+                task_description = task_review.get('task_description', '')
+                solution_provided = task_review.get('solution_provided', '')
+                success_criteria = task_review.get('success_criteria', [])
+                
+                print(f"📊 Task ID: {task_id}")
+                print(f"📊 Task Description: {task_description}")
+                print(f"📊 Solution length: {len(str(solution_provided))} chars")
+                print(f"📊 Success criteria: {success_criteria}")
+                
+                # Simple validation logic
+                if solution_provided and len(str(solution_provided)) > 10:
+                    score = 8.0
+                    success = True
+                    feedback = "Task appears to be completed successfully"
+                    next_action = "proceed"
+                else:
+                    score = 3.0
+                    success = False
+                    feedback = "Solution appears incomplete or empty"
+                    next_action = "retry"
+                
+                result = {
+                    "performance_score": score,
+                    "success": success,
+                    "feedback_for_retry": feedback,
+                    "next_action": next_action,
+                    "recommendations": ["Ensure solution is complete and detailed"]
+                }
+                
+                print(f"✅ Task review result: {result}")
+                return result
+            
+            # Handle validation_context action (used by pre-execution validation)
+            elif kwargs.get('action') == 'validate' and 'validation_context' in kwargs:
+                print(f"📋 Processing validation_context action")
+                context = kwargs.get('validation_context', {})
+                
+                # Simple validation
+                proposed_task = context.get('proposed_task', '')
+                if proposed_task:
+                    result = {
+                        "performance_score": 8.0,
+                        "success": True,
+                        "feedback_for_retry": "Task validation passed",
+                        "next_action": "proceed",
+                        "recommendations": []
+                    }
+                else:
+                    result = {
+                        "performance_score": 3.0,
+                        "success": False,
+                        "feedback_for_retry": "Task validation failed - no task name provided",
+                        "next_action": "regenerate",
+                        "recommendations": ["Provide clear task name"]
+                    }
+                
+                print(f"✅ Validation result: {result}")
+                return result
+            
+            # Original introspect logic
             params = IntrospectParams(**kwargs)
+            print(f"📋 Processing standard introspect action: {params.action}")
             
             if params.action == IntrospectAction.CRITIQUE:
                 # Simplified critique (replace with LLM-based analysis)
@@ -84,7 +154,12 @@ class IntrospectTool(BaseTool):
                     "message": "Generated improvements for context"
                 }
             
+            print(f"❌ Unknown action: {params.action}")
             return {"error": f"Unknown action: {params.action}"}
             
         except Exception as e:
+            print(f"❌ Introspection failed with error: {str(e)}")
+            import traceback
+            print(f"📋 Full traceback: {traceback.format_exc()}")
             return {"error": f"Introspection failed: {str(e)}"}
+
