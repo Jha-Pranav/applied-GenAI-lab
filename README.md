@@ -1,25 +1,70 @@
-# Applied GenAI Lab - Autonomous Software Engineering Agent
+# 🧑‍💻 Buddy – Autonomous Software Engineering Agent
 
-> **🚀 Pushing the boundaries of agentic AI to the edge with autonomous software engineering capabilities using smaller, efficient models**
+> **🚀 Pushing the boundaries of agentic AI on the edge with autonomous software engineering capabilities powered by small, efficient models.**
+
+---
+
+## 📖 Introduction
+
+**Buddy** is an autonomous AI agent designed to replicate the core responsibilities of a software engineer — from **requirement gathering** and **implementation** to **testing**, **deployment**, **monitoring**, and even **productization at scale**.
+
+This project began as a personal exploration into how **agentic AI systems** can autonomously manage software development workflows, inspired by research and innovations like **Amazon Q** and new paradigms in AI reasoning and autonomy [1][2].
+
+Buddy brings the power of these ideas to the **edge** — enabling local-first, low-latency, private, and efficient AI assistants that require **no cloud dependency** and can run on consumer-grade CPUs/GPUs.
+
+---
+
+## 💡 What is Buddy?
+
+Think of Buddy as your personal **AI-powered intern or junior developer** that:
+
+* Understands plain-language requirements
+* Implements and tests features
+* Fixes bugs
+* Writes code, commits it, and optionally deploys it
+* Works collaboratively in a multi-agent ecosystem
+
+Whether you're working on a complex framework or need a bug fix, you simply **ask Buddy in the terminal**, and it takes care of the rest — autonomously and efficiently.
+
+This aligns with the emerging shift toward **experience-driven agents** capable of memory, self-reflection, and task planning [2].
+
+---
 
 ## 🎯 Project Objectives
 
-### Vision: Autonomous Software Engineering at Scale
-This project aims to create a **production-grade autonomous agent** capable of handling complex software engineering tasks with minimal human intervention. By leveraging smaller, efficient models (like Qwen 14B), we demonstrate that sophisticated agentic AI capabilities don't require massive computational resources.
+### Vision: **Autonomous Software Engineering at Scale**
 
-### Core Mission
-- **🤖 Autonomous Task Execution**: End-to-end software development from planning to deployment
-- **🧠 Intelligent Decision Making**: Multi-perspective analysis for architectural and technical decisions  
-- **⚡ Edge AI Deployment**: Efficient operation on consumer hardware with smaller models
-- **🔧 Tool-Based Architecture**: Extensible system with intelligent tool selection and coordination
-- **📊 Reinforcement Learning Integration**: Future  (Tool-Augmented Reinforcement Learning for Knowledge Acquisition) implementation for continuous improvement
+Demonstrate that **powerful agentic AI systems** can be run efficiently on local machines, enabling **fully autonomous software development workflows** without relying on massive cloud infrastructure — consistent with ideas from recent research into scalable autonomy [1].
+
+---
+
+### Mission Highlights
+
+* **🤖 Autonomous Task Execution**
+  End-to-end development lifecycle: planning → coding → testing → deployment
+
+* **🧠 Intelligent Decision-Making**
+  Multi-agent reasoning for architectural, technical, and strategic choices
+
+* **⚡ Edge-Ready AI**
+  Lightweight models running on consumer-grade hardware (Phi, Gemma, Mistral, etc.)
+
+* **🔧 Tool-Based Architecture**
+  Modular tools with intelligent selection and coordination (cf. Toolformer, etc.)
+
+* **📊 Reinforcement Learning (Future Roadmap)**
+  Tool-augmented reinforcement learning and continual improvement [1]
+
+---
 
 ### Research Goals
-1. **Demonstrate smaller model capabilities** in complex reasoning tasks
-2. **Advance agentic AI architectures** with multi-agent coordination
-3. **Explore tool-based learning** and autonomous skill acquisition
-4. **Push edge AI boundaries** for practical software engineering applications
-5. **Develop  framework** for tool-based reinforcement learning
+
+1. Advance **multi-agent coordination** architectures
+2. Explore **tool-based learning** and plug-and-play AI tools
+3. Push the boundaries of **edge deployment** for real-world software engineering
+4. Develop a **framework for reinforcement learning with tools** and dynamic memory
+
+---
 
 ## 🏗️ System Architecture
 
@@ -43,10 +88,28 @@ This project aims to create a **production-grade autonomous agent** capable of h
 │  │                                                             │ │
 │  │  🎯 DebateAgent     📋 TaskPlanner     🔍 Introspection    │ │
 │  │  Multi-perspective  Intelligent        Self-reflection     │ │
-│  │  analysis          task breakdown      & validation        │ │
+│  │  analysis           task breakdown      & validation       │ │
 │  └─────────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## ✅ Example Use Cases
+
+* **"Add a new feature."** → Describe it in plain text. Buddy plans, implements, and tests it.
+* **"Fix a bug."** → Share an error trace or describe the behavior. Buddy finds, patches, and validates it.
+* **"Build a new framework or microservice."** → Describe the architecture or goals, and let Buddy handle the heavy lifting, while you focus on "vibe coding."
+
+---
+
+## 🧪 Coming Soon
+
+* Persistent memory and context tracking
+* Reinforcement learning from human/AI and tool feedback
+* GUI frontend for real-time visibility and control
+* Evaluation for agent benchmarking
+
 
 ## 🚀 Quick Start
 
@@ -844,6 +907,14 @@ plan = await planner_main("Build microservices platform")
 - External service integration
 
 ---
+## 📚 References
+
+1. Chen, Andy, et al. **Tool-Augmented Reinforcement Learning for Language Agents**. arXiv preprint, [arXiv:2506.02153](https://arxiv.org/abs/2506.02153), 2024.
+
+2. DeepMind. **The Era of Experience: A New Foundation for AI**. DeepMind Research, 2024.
+   [PDF](https://storage.googleapis.com/deepmind-media/Era-of-Experience%20/The%20Era%20of%20Experience%20Paper.pdf)
+
+
 
 **Built with ❤️ for intelligent automation**
 
