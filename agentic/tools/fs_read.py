@@ -4,6 +4,9 @@
 __all__ = ['logger', 'ToolCallMode', 'FsReadOperation', 'FsReadParams', 'FsReadTool']
 
 # %% ../../nbs/buddy/backend/tools/filesystem/fs_read.ipynb 1
+__all__ = ['logger', 'ToolCallMode', 'FsReadOperation', 'FsReadParams', 'FsReadTool']
+
+# %% ../../nbs/buddy/backend/tools/filesystem/fs_read.ipynb 1
 import os
 import re
 import time
@@ -174,11 +177,13 @@ class FsReadTool(BaseTool):
 
     def _build_tree(self, rel_paths: List[str]) -> str:
         """Build a tree representation of file paths."""
-        tree = defaultdict(lambda: defaultdict(dict))
+        tree = {}
         for rel_path in rel_paths:
             parts = rel_path.split(os.sep)
             current = tree
             for part in parts[:-1]:  # Dirs
+                if part not in current:
+                    current[part] = {}
                 current = current[part]
             if parts:  # File
                 current[parts[-1]] = {}  # Empty dict for file
@@ -257,7 +262,7 @@ class FsReadTool(BaseTool):
             if self._is_excluded(rel_path):
                 return json.dumps({"error": f"Path {path} is excluded by patterns"})
             content = self._extract_from_file(path, query)
-            return json.dumps({"data": content})
+            return json.dumps({"data": content}, ensure_ascii=False)
         else:
             snippets = []
             for root, dirs, files in os.walk(path):
@@ -268,13 +273,18 @@ class FsReadTool(BaseTool):
                         if not self._is_excluded(rel_path):
                             file_snip = self._extract_from_file(full_path, query)
                             if file_snip and not file_snip.startswith("[Binary") and not file_snip.startswith("Error"):
-                                snippets.append({"file": full_path, "snippet": file_snip})
+                                snippets.append({"file": rel_path, "snippet": file_snip[:1000]})  # Limit snippet size
             if not snippets:
                 return json.dumps({"error": f"No valid text files matched the criteria in {path}"})
-            content = json.dumps({"data": snippets})
-            if len(content) > 16 * 1024:
-                content = content[:16 * 1024] + "... [truncated]"
-            return content
+            try:
+                content = json.dumps({"data": snippets}, ensure_ascii=False)
+                if len(content) > 16 * 1024:
+                    # Truncate snippets instead of the JSON
+                    truncated_snippets = snippets[:10]  # Limit to first 10 files
+                    content = json.dumps({"data": truncated_snippets, "truncated": True}, ensure_ascii=False)
+                return content
+            except Exception as e:
+                return json.dumps({"error": f"JSON serialization failed: {str(e)}"})
 
     def _extract_from_file(self, file_path: str, query: str) -> str:
         """Extract content from a single file with regex matching."""
@@ -289,13 +299,17 @@ class FsReadTool(BaseTool):
                 lines = f.readlines()
             if not query:
                 content = "".join(lines)
-                if len(content) > 16 * 1024:
-                    content = content[:16 * 1024] + "... [truncated]"
+                if len(content) > 1024:  # Smaller limit
+                    content = content[:1024] + "... [truncated]"
                 return content + f"\n--- File Info: {file_info['lines']} lines, {file_info['size']} bytes ---"
             matches = []
             for line_num, line in enumerate(lines, 1):
-                if pattern.search(line):
-                    matches.append(f"Line {line_num}: {line.strip()}")
+                if pattern and pattern.search(line):
+                    # Clean the line to avoid JSON issues
+                    clean_line = line.strip().replace('"', '\\"').replace('\n', '\\n').replace('\r', '\\r')
+                    matches.append(f"Line {line_num}: {clean_line}")
+                    if len(matches) >= 20:  # Limit matches per file
+                        break
             if not matches:
                 return "No matches found"
             content = "\n".join(matches)
@@ -430,3 +444,4 @@ class FsReadTool(BaseTool):
             "error": overall_error,
             "metadata": {"processed_files": total_processed}
         }
+

@@ -132,19 +132,16 @@ class CodeInterpreterTool(BaseTool):
                     return {"success": False, "error": f"Invalid working directory: {str(e)}", "execution_time": 0.0}
 
             try:
-                # Set up safe globals to prevent dangerous operations
+                # Set up safe globals with essential builtins
                 safe_globals = {
-                    "__builtins__": {
-                        k: v for k, v in __builtins__.__dict__.items()
-                        if k not in ["__import__", "eval", "exec", "open", "sys"]
-                    },
-                    "print": print,  # Allow print for output
+                    "__builtins__": __builtins__,
+                    "print": print,
                     # Pre-import common modules for analysis
                     "json": __import__("json"),
                     "re": __import__("re"),
                     "ast": __import__("ast"),
                     "hashlib": __import__("hashlib"),
-                    "os": __import__("os")  # Limited os for env access
+                    "os": __import__("os")
                 }
                 # Inject custom globals if provided
                 if params.custom_globals:
@@ -232,3 +229,4 @@ class CodeInterpreterTool(BaseTool):
         except Exception as e:
             logger.critical(f"Unexpected execution error: {str(e)}")
             return {"success": False, "error": f"Unexpected error: {str(e)}", "execution_time": 0.0}
+

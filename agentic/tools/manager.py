@@ -5,8 +5,6 @@ __all__ = ['ToolManager']
 
 # %% ../../nbs/buddy/backend/tools/core/manager.ipynb 1
 from typing import Dict, List, Any, Optional
-import importlib
-import inspect
 
 from .base import BaseTool
 from .registry import ToolRegistry
@@ -14,14 +12,9 @@ from .fs_read import FsReadTool
 from .fs_write import FsWriteTool
 from .execute_bash import ExecuteBashTool
 from .code_interpreter import CodeInterpreterTool
-from .code_quality import CodeQualityTool
-from .introspect import IntrospectTool
 from .debate_agent import DebateAgentTool
-from .memory import MemoryManagerTool
 from .task_planner import TaskPlannerTool
-from .task_executor import TaskExecutorTool
-from .task_monitor import TaskMonitorTool
-from .doc_generator import DocGeneratorTool
+
 
 # %% ../../nbs/buddy/backend/tools/core/manager.ipynb 2
 class ToolManager:
@@ -41,23 +34,17 @@ class ToolManager:
             # System tools
             ExecuteBashTool(),
             
-            # # Analysis tools
+            # Analysis tools
             CodeInterpreterTool(),
-            # CodeQualityTool(),
-            
-            # # Intelligence tools
-            # IntrospectTool(),
-            # DebateAgentTool(),
-            # MemoryManagerTool(),
-            
-            # # Planning tools
-            # TaskPlannerTool(),
-            # TaskExecutorTool(),
-            # TaskMonitorTool(),
 
             
-            # # Utility tools
-            # DocGeneratorTool(),
+            # Intelligence tools
+
+            DebateAgentTool(),
+
+            
+            # Planning tools
+            TaskPlannerTool()
         ]
         
         for tool in default_tools:
@@ -86,4 +73,5 @@ class ToolManager:
     def unregister_tool(self, tool_name: str):
         """Unregister a tool"""
         self.registry.unregister_tool(tool_name)
+
 

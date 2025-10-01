@@ -4,62 +4,58 @@
 __all__ = ['DebateAgentTool']
 
 # %% ../../nbs/buddy/backend/tools/intelligence/debate_agent.ipynb 1
-from .base import BaseTool
-from ..schemas import DebateAgentParams
-from typing import Dict, Any, List
+from typing import Dict, Any
+import asyncio
+from .base import BaseTool, ToolMetadata, ToolCategory
 
 class DebateAgentTool(BaseTool):
+    """Multi-perspective analysis and structured debate tool"""
+    
+    def __init__(self):
+        super().__init__(
+            metadata=ToolMetadata(
+                name="debate_agent",
+                description="Multi-perspective analysis and structured debate for complex decisions",
+                category=ToolCategory.INTELLIGENCE
+            )
+        )
+    
     def get_parameters_schema(self) -> Dict[str, Any]:
-        """Return the OpenAI-compatible schema for debate_agent."""
         return {
-                "type": "function",
-                "function": {
-                    "name": "debate_agent",
-                    "description": "Multi-perspective debate agent for design decisions. Presents alternative viewpoints and challenges assumptions.",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "decision": {"type": "string", "description": "The design decision or approach being considered"},
-                            "context": {"type": "string", "description": "Background context and requirements"},
-                            "perspectives": {
-                                "type": "array",
-                                "items": {"type": "string"},
-                                "description": "Perspectives to consider: security,license, performance, maintainability, scalability, cost, user_experience"
-                            },
-                            "debate_style": {
-                                "type": "string",
-                                "enum": ["pros_cons", "alternatives", "devil_advocate", "stakeholder_views"],
-                                "description": "Style of debate analysis"
-                            }
-                        },
-                        "required": ["decision", "context"]
-                    }
+            "type": "object",
+            "properties": {
+                "topic": {
+                    "type": "string",
+                    "description": "Decision or topic to debate"
+                },
+                "context": {
+                    "type": "string", 
+                    "description": "Background context for the debate"
+                },
+                "perspectives": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Specific perspectives to consider (optional)"
                 }
-            }
-
+            },
+            "required": ["topic", "context"]
+        }
+    
     def execute(self, **kwargs) -> Dict[str, Any]:
-        """Execute debate_agent to analyze a decision from multiple perspectives."""
+        """Execute debate analysis"""
         try:
-            params = DebateAgentParams(**kwargs)
-            perspectives = params.perspectives or ["Pros", "Cons"]
-            style = params.debate_style or "pros_cons"
+            topic = kwargs.get("topic", "")
+            context = kwargs.get("context", "")
             
-            # Simplified debate logic (replace with LLM-based analysis if needed)
-            analysis = []
-            for perspective in perspectives:
-                analysis.append({
-                    "perspective": perspective,
-                    "arguments": [f"{perspective} argument for {params.decision}"]
-                })
+            if not topic or not context:
+                return {"error": "Topic and context are required"}
             
-            return {
-                "success": True,
-                "decision": params.decision,
-                "context": params.context,
-                "style": style,
-                "analysis": analysis,
-                "summary": f"Analyzed {params.decision} from {len(perspectives)} perspectives"
-            }
+            # Import and run debate
+            from agentic.agent.debater import create_debate
+            result = asyncio.run(create_debate(topic=topic, context=context))
+            
+            return {"success": True, "result": result}
             
         except Exception as e:
-            return {"error": f"Debate analysis failed: {str(e)}"}
+            return {"error": f"Debate execution failed: {str(e)}"}
+

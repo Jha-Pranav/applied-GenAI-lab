@@ -148,9 +148,37 @@ class FsWriteTool(BaseTool):
             ))
             if not diff_lines:
                 return f"No changes in {filepath}"
+            
+            # Add colorful IDE-style diff formatting
+            colored_diff = []
+            line_num_old = 0
+            line_num_new = 0
+            
+            for line in diff_lines:
+                if line.startswith('---') or line.startswith('+++'):
+                    colored_diff.append(f"\033[1m{line}\033[0m")  # Bold
+                elif line.startswith('@@'):
+                    colored_diff.append(f"\033[36m{line}\033[0m")  # Cyan
+                elif line.startswith('-'):
+                    if not line.startswith('---'):
+                        line_num_old += 1
+                        colored_diff.append(f"\033[31m- {line_num_old:6}: {line[1:]}\033[0m")  # Red
+                elif line.startswith('+'):
+                    if not line.startswith('+++'):
+                        line_num_new += 1
+                        colored_diff.append(f"\033[32m+ {line_num_new:6}: {line[1:]}\033[0m")  # Green
+                else:
+                    line_num_old += 1
+                    line_num_new += 1
+                    colored_diff.append(f"  {line_num_old:6}: {line}")
+            
             added = sum(1 for line in diff_lines if line.startswith('+') and not line.startswith('+++'))
             removed = sum(1 for line in diff_lines if line.startswith('-') and not line.startswith('---'))
-            diff_output = diff_lines + [f"\nSummary: +{added} -{removed} lines"]
+            colored_diff.append(f"\n\033[32mSummary: +{added} -{removed} lines\033[0m")
+            return "\n".join(colored_diff)
+        except Exception as e:
+            logger.error(f"Diff generation failed: {e}")
+            return f"Error generating diff for {filepath}: {e}"
             return '\n'.join(diff_output)
         except Exception as e:
             logger.error(f"Diff generation failed for {filepath}: {e}")
@@ -319,3 +347,4 @@ class FsWriteTool(BaseTool):
                 "description": "Results ready for chaining: Use 'data[].path' for execute_bash (e.g., git add)."
             }
         }
+

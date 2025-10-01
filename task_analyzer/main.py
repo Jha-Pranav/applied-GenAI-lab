@@ -208,5 +208,3 @@ async def main():
     print(f"⏱️ Total estimated time: {results['metrics'].total_estimated_hours:.1f} hours")
     print(f"🎯 Critical path: {results['metrics'].critical_path_hours:.1f} hours")
 
-if __name__ == "__main__":
-    asyncio.run(main())

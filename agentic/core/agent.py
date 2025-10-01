@@ -16,6 +16,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+
 # %% ../../nbs/buddy/backend/core/agent.ipynb 2
 @dataclass
 class Message:
@@ -79,22 +80,97 @@ class Agent:
         # Add user message
         self.conversation_history.append(Message(role="user", content=message))
 
+    def _is_conversation_complete(self, result: Dict[str, Any], iteration_count: int) -> bool:
+        """Smart detection of conversation completion"""
+        
+        content = result.get("content", "").strip()
+        tool_calls = result.get("tool_calls", [])
+        finish_reason = result.get("finish_reason")
+        
+        # 1. Explicit completion signals
+        if finish_reason in ["stop", "length", "content_filter"]:
+            return True
+            
+        # 2. Tool calls present - continue to execute them
+        if tool_calls:
+            return False
+            
+        # 3. Content analysis for completion indicators
+        completion_phrases = [
+            "task completed", "done", "finished", "complete",
+            "that's all", "nothing more", "no further", 
+            "task is finished", "successfully completed"
+        ]
+        
+        if any(phrase in content.lower() for phrase in completion_phrases):
+            logger.debug("Detected completion phrase in content")
+            return True
+            
+        # 4. Empty or minimal response (likely done)
+        if len(content) < 10 and not tool_calls:
+            logger.debug("Minimal response with no tool calls - likely complete")
+            return True
+            
+        # 5. Repetitive responses (stuck in loop)
+        if iteration_count > 2:
+            recent_messages = self.conversation_history[-3:]
+            if len(recent_messages) >= 2:
+                last_content = recent_messages[-1].content
+                prev_content = recent_messages[-2].content
+                
+                # Check for identical or very similar responses
+                if last_content == prev_content or (
+                    len(last_content) > 20 and 
+                    len(set(last_content.split()) & set(prev_content.split())) / 
+                    max(len(last_content.split()), len(prev_content.split())) > 0.8
+                ):
+                    logger.debug("Detected repetitive responses - likely stuck")
+                    return True
+        
+        # 6. Question without tool calls (asking for clarification)
+        if content.endswith('?') and not tool_calls and len(content) > 20:
+            logger.debug("LLM asking question - likely needs user input")
+            return True
+            
+        # 7. Default: continue if we have meaningful content
+        return False
+
+    def run(self, message: str, **kwargs) -> Dict[str, Any]:
+        """Execute agent with message and return response."""
+        # Apply guardrails
+        for guardrail in self.guardrails:
+            result = guardrail(message)
+            if not isinstance(result, bool) or not result:
+                return {"content": "Request blocked by guardrails", "blocked": True}
+
+        # Add user message
+        self.conversation_history.append(Message(role="user", content=message))
+
         # Initialize result
         final_result = {"content": "", "tool_calls": [], "blocked": False}
-        max_iterations = kwargs.get('max_iterations', 10)  # Fallback safety
+        iteration_count = 0
 
         while True:
+            iteration_count += 1
+            logger.debug(f"Agent iteration {iteration_count}")
+            
             # Get available tools
             available_tools = self._get_available_tools()
 
             # Create completion
             messages = self._format_messages_for_llm()
             stream = kwargs.get('stream', True)
+            
+            # Filter out Agent-specific parameters before passing to LLM
+            llm_kwargs = {k: v for k, v in kwargs.items() 
+                         if k not in ['max_iterations', 'stream']}
+            llm_kwargs['stream'] = stream  # Add stream back
+            
             try:
                 response = self.llm_client.create_completion(
                     messages=messages,
                     tools=available_tools,
-                    **kwargs
+                    **llm_kwargs
                 )
             except Exception as e:
                 logger.error(f"LLM completion failed: {str(e)}")
@@ -126,21 +202,17 @@ class Agent:
             final_result["content"] = result.get("content", "")
             final_result["tool_calls"].extend(result.get("tool_calls", []))
 
-            # Check stop reason
-            finish_reason = result.get("finish_reason", "unknown")
-            logger.debug(f"LLM response finish reason: {finish_reason}")
+            # Smart completion detection
+            if self._is_conversation_complete(result, iteration_count):
+                logger.debug("Conversation detected as complete")
+                break
 
             # Handle tool calls if present
-            if result.get("tool_calls") and finish_reason == "tool_calls":
+            if result.get("tool_calls"):
+                logger.debug(f"Executing {len(result['tool_calls'])} tool calls")
                 executed_calls = self._execute_tool_calls(result["tool_calls"])
                 final_result["tool_calls"] = executed_calls
                 continue  # Continue loop to process tool results
-            
-            elif finish_reason in ["stop", "length", "content_filter"]:
-                break  # Stop if LLM indicates completion
-            else:
-                logger.warning(f"Unknown finish reason: {finish_reason}")
-                break  # Break on unknown finish reason
 
         # Limit conversation history
         if len(self.conversation_history) > 50:
@@ -209,3 +281,4 @@ class Agent:
     def clear_history(self) -> None:
         """Clear conversation history except system message."""
         self.conversation_history = [Message(role="system", content=self.system_prompt)]
+

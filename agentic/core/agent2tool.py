@@ -93,7 +93,7 @@ class AgentOrchestrator:
             self.agent_tools[name] = agent_tool
             
             # Add the agent tool to other agents
-            for other_name, other_agent in self.agents.items():
+            for other_name, other_agent in self.agent.items():
                 if other_name != name:
                     other_agent.add_tool(name, agent_tool.execute)
     
