@@ -114,10 +114,10 @@ git clone <repository-url>
 cd applied-GenAI-lab
 
 # Install dependencies
-pip install -r requirements.txt
+uv sync
 
 # Run the assistant
-python main.py
+uv run main.py
 ```
 
 ### Configuration
@@ -143,67 +143,6 @@ max_history = 100
 show_thinking = true
 max_reasoning_steps = 10
 retry_count = 2
-```
-
-## 🤖 Current Agents & Tools Inventory
-
-### 🎯 Autonomous Agents (2 Active)
-
-#### 1. **DebateAgent** (`agentic/agent/debater.py`)
-- **Purpose**: Multi-perspective analysis and structured decision making
-- **Capabilities**: 
-  - Creates 4 specialized agents (Advocate, Critic, Expert, Moderator)
-  - Conducts structured debates with opening statements and rebuttals
-  - Provides balanced recommendations with evidence-based analysis
-- **Use Cases**: Architectural decisions, technology choices, policy analysis
-- **Model**: Qwen 3:8B with streaming output
-
-#### 2. **TaskPlanner** (`agentic/agent/planner/`)
-- **Purpose**: Intelligent task breakdown and execution planning
-- **Capabilities**:
-  - Project complexity analysis and framework selection
-  - Hierarchical task decomposition with dependencies
-  - Pre/post-execution validation with feedback loops
-  - Caching system for performance optimization
-- **Components**: 
-  - `main.py` - Orchestration layer
-  - `executor.py` - Task execution coordinator
-  - `task_generator.py` - LLM-powered task creation
-  - `validation.py` - Quality assurance system
-- **Model**: Qwen 3:14B with advanced reasoning
-
-### 🛠️ Core Tools (6 Active)
-
-#### File System Tools
-1. **`fs_read`** - Advanced file discovery with Git integration and fuzzy matching
-2. **`fs_write`** - Intelligent file operations with diff preview and validation
-
-#### Execution Tools  
-3. **`execute_bash`** - Secure shell command execution with environment control
-4. **`code_interpreter`** - Safe Python code execution with output capture
-
-#### Intelligence Tools
-5. **`debate_agent`** - Tool wrapper for DebateAgent with streaming support
-6. **`task_planner`** - Tool wrapper for TaskPlanner with caching
-
-### 🔄 Tool Selection & Coordination
-
-#### LLM-Powered Selection
-- **Intelligent Routing**: LLM analyzes request context and selects appropriate tools
-- **No Hardcoded Rules**: Dynamic tool selection based on request semantics
-- **Multi-tool Coordination**: Automatic chaining and dependency management
-
-#### Example Tool Selection Logic
-```python
-# User: "Should we migrate to microservices? Analyze pros and cons"
-# LLM sees: [fs_read, fs_write, execute_bash, code_interpreter, debate_agent, task_planner]
-# LLM selects: debate_agent (for decision analysis)
-
-# User: "Create a web API with authentication and database"  
-# LLM selects: task_planner (for complex project planning)
-
-# User: "Read the config file and show database settings"
-# LLM selects: fs_read (for simple file operations)
 ```
 # 🔄 Buddy AI System - Complete Execution Flow Diagram
 
@@ -333,7 +272,6 @@ graph TD
     class K5,K8,Y,FF,NN,PP,TT,VV decision
     class DD,OO,QQ,WW error
     class EE,JJ,KK success
-```
 
 ## 🔍 Detailed Component Flows
 
@@ -513,6 +451,67 @@ graph TD
     P --> W
     S --> W
     V --> W
+```
+
+## 🤖 Current Agents & Tools Inventory
+
+### 🎯 Autonomous Agents (2 Active)
+
+#### 1. **DebateAgent** (`agentic/agent/debater.py`)
+- **Purpose**: Multi-perspective analysis and structured decision making
+- **Capabilities**: 
+  - Creates 4 specialized agents (Advocate, Critic, Expert, Moderator)
+  - Conducts structured debates with opening statements and rebuttals
+  - Provides balanced recommendations with evidence-based analysis
+- **Use Cases**: Architectural decisions, technology choices, policy analysis
+- **Model**: Qwen 3:8B with streaming output
+
+#### 2. **TaskPlanner** (`agentic/agent/planner/`)
+- **Purpose**: Intelligent task breakdown and execution planning
+- **Capabilities**:
+  - Project complexity analysis and framework selection
+  - Hierarchical task decomposition with dependencies
+  - Pre/post-execution validation with feedback loops
+  - Caching system for performance optimization
+- **Components**: 
+  - `main.py` - Orchestration layer
+  - `executor.py` - Task execution coordinator
+  - `task_generator.py` - LLM-powered task creation
+  - `validation.py` - Quality assurance system
+- **Model**: Qwen 3:14B with advanced reasoning
+
+### 🛠️ Core Tools (6 Active)
+
+#### File System Tools
+1. **`fs_read`** - Advanced file discovery with Git integration and fuzzy matching
+2. **`fs_write`** - Intelligent file operations with diff preview and validation
+
+#### Execution Tools  
+3. **`execute_bash`** - Secure shell command execution with environment control
+4. **`code_interpreter`** - Safe Python code execution with output capture
+
+#### Intelligence Tools
+5. **`debate_agent`** - Tool wrapper for DebateAgent with streaming support
+6. **`task_planner`** - Tool wrapper for TaskPlanner with caching
+
+### 🔄 Tool Selection & Coordination
+
+#### LLM-Powered Selection
+- **Intelligent Routing**: LLM analyzes request context and selects appropriate tools
+- **No Hardcoded Rules**: Dynamic tool selection based on request semantics
+- **Multi-tool Coordination**: Automatic chaining and dependency management
+
+#### Example Tool Selection Logic
+```python
+# User: "Should we migrate to microservices? Analyze pros and cons"
+# LLM sees: [fs_read, fs_write, execute_bash, code_interpreter, debate_agent, task_planner]
+# LLM selects: debate_agent (for decision analysis)
+
+# User: "Create a web API with authentication and database"  
+# LLM selects: task_planner (for complex project planning)
+
+# User: "Read the config file and show database settings"
+# LLM selects: fs_read (for simple file operations)
 ```
 
 ## 📊 Key Decision Points
