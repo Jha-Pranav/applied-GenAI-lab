@@ -12,8 +12,8 @@ from .fs_read import FsReadTool
 from .fs_write import FsWriteTool
 from .execute_bash import ExecuteBashTool
 from .code_interpreter import CodeInterpreterTool
-from .debate_agent import DebateAgentTool
-from .task_planner import TaskPlannerTool
+# from agentic.tools.debate_agent import DebateAgentTool
+# from agentic.tools.task_planner import TaskPlannerTool
 
 
 # %% ../../nbs/buddy/backend/tools/core/manager.ipynb 2
@@ -38,13 +38,12 @@ class ToolManager:
             CodeInterpreterTool(),
 
             
-            # Intelligence tools
-
-            DebateAgentTool(),
+            # # Intelligence tools
+            # DebateAgentTool(),
 
             
-            # Planning tools
-            TaskPlannerTool()
+            # # Planning tools
+            # TaskPlannerTool()
         ]
         
         for tool in default_tools:

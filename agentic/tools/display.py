@@ -17,6 +17,9 @@ class ToolExecutionDisplay:
             if args:
                 print(f"Command: {args.get('command')}")
                 print(f"Summary : {args.get('summary')}")
+        else:
+            if args:
+                print(f"args: {args.get('operations')}")
     
     def show_tool_error(self, tool_name: str, error: str):
         """Show tool execution error"""

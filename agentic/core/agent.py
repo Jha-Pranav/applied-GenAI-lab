@@ -94,24 +94,8 @@ class Agent:
         # 2. Tool calls present - continue to execute them
         if tool_calls:
             return False
-            
-        # 3. Content analysis for completion indicators
-        completion_phrases = [
-            "task completed", "done", "finished", "complete",
-            "that's all", "nothing more", "no further", 
-            "task is finished", "successfully completed"
-        ]
-        
-        if any(phrase in content.lower() for phrase in completion_phrases):
-            logger.debug("Detected completion phrase in content")
-            return True
-            
-        # 4. Empty or minimal response (likely done)
-        if len(content) < 10 and not tool_calls:
-            logger.debug("Minimal response with no tool calls - likely complete")
-            return True
-            
-        # 5. Repetitive responses (stuck in loop)
+
+        # 3. Repetitive responses (stuck in loop)
         if iteration_count > 2:
             recent_messages = self.conversation_history[-3:]
             if len(recent_messages) >= 2:
@@ -163,8 +147,8 @@ class Agent:
             
             # Filter out Agent-specific parameters before passing to LLM
             llm_kwargs = {k: v for k, v in kwargs.items() 
-                         if k not in ['max_iterations', 'stream']}
-            llm_kwargs['stream'] = stream  # Add stream back
+                         if k not in ['max_iterations']}
+            llm_kwargs['stream'] = stream  
             
             try:
                 response = self.llm_client.create_completion(
@@ -213,8 +197,10 @@ class Agent:
                 executed_calls = self._execute_tool_calls(result["tool_calls"])
                 final_result["tool_calls"] = executed_calls
                 continue  # Continue loop to process tool results
-
-        # Limit conversation history
+                
+        # Optional : Clean tool call details from the history
+        self.conversation_history = [msg for msg in self.conversation_history if not (msg.role == "tool" or msg.tool_calls)]
+        # Limit conversation history # TODO :Handle this in a smarter way
         if len(self.conversation_history) > 50:
             self.conversation_history = [self.conversation_history[0]] + self.conversation_history[-49:]
 
@@ -247,6 +233,9 @@ class Agent:
                     result = self.tool_manager.execute_tool(function_name, arguments)
                 tool_call["result"] = result
                 executed_calls.append(tool_call)
+                if not result['success']:
+                    display.show_tool_error(f"Error in {function_name}", str(result['error']))
+                    
 
                 # Append tool result to conversation history
                 self.conversation_history.append(Message(
@@ -259,12 +248,14 @@ class Agent:
                 display.show_tool_error(f"Error in {function_name}", str(e))
                 tool_call["error"] = str(e)
                 executed_calls.append(tool_call)
-
+        
         return executed_calls
 
     def _get_available_tools(self) -> List[Dict]:
         """Get OpenAI-formatted tools for the configured tool names."""
-        return self.tool_manager.get_tools(self.config.tools)
+        if self.config.tools:
+            return self.tool_manager.get_tools(self.config.tools)
+        return self.tool_manager.get_tools()
 
     def _format_messages_for_llm(self) -> List[Dict]:
         """Convert Message objects to a format suitable for the LLM client."""

@@ -360,6 +360,7 @@ class BuddyClient:
         
         self.console.print("[info]🔄 Executing with tool coordination...[/info]")
         
+        # Use production-grade system prompt
         messages = [
             {"role": "system", "content": get_system_prompt()},
             {"role": "user", "content": f"Execute this complex request: {request}"}
