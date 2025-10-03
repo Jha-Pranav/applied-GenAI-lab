@@ -9,11 +9,11 @@ import io
 import os
 import time
 import logging
-from contextlib import redirect_stdout, redirect_stderr
+from contextlib import redirect_stdout, redirect_stderr, nullcontext
 from typing import Dict, Any, Optional, List
 from pydantic import BaseModel, ValidationError, field_validator, Field
 from pathlib import Path
-from .base import BaseTool, ToolMetadata, ToolCategory
+from .base import BaseTool, ToolMetadata, ToolCategory, create_success_response, create_error_response, extract_validation_error
 
 # Configure logging for production
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -117,116 +117,122 @@ class CodeInterpreterTool(BaseTool):
         """Execute Python code with specified parameters in a controlled environment."""
         try:
             params = CodeInterpreterParams(**kwargs)
-            start_time = time.time()
-            stdout = io.StringIO()
-            stderr = io.StringIO()
-            local_vars = {}
+        except ValidationError as e:
+            return create_error_response(f"Invalid parameters: {extract_validation_error(e)}")
+        except Exception as e:
+            return create_error_response(f"Parameter validation failed: {str(e)}")
 
-            # Set working directory if provided
-            original_cwd = os.getcwd()
-            if params.working_dir:
-                try:
-                    os.chdir(params.working_dir)
-                except OSError as e:
-                    logger.error(f"Failed to set working directory {params.working_dir}: {str(e)}")
-                    return {"success": False, "error": f"Invalid working directory: {str(e)}", "execution_time": 0.0}
+        start_time = time.time()
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        local_vars = {}
 
+        # Set working directory if provided
+        original_cwd = os.getcwd()
+        if params.working_dir:
             try:
-                # Set up safe globals with essential builtins
-                safe_globals = {
-                    "__builtins__": __builtins__,
-                    "print": print,
-                    # Pre-import common modules for analysis
-                    "json": __import__("json"),
-                    "re": __import__("re"),
-                    "ast": __import__("ast"),
-                    "hashlib": __import__("hashlib"),
-                    "os": __import__("os")
-                }
-                # Inject custom globals if provided
-                if params.custom_globals:
-                    safe_globals.update(params.custom_globals)
+                os.chdir(params.working_dir)
+            except OSError as e:
+                return create_error_response(f"Cannot access working directory '{params.working_dir}': {str(e)}")
 
-                # Apply environment variables
-                if params.env_vars:
-                    os.environ.update(params.env_vars)
+        try:
+            # Set up safe globals with essential builtins
+            safe_globals = {
+                "__builtins__": __builtins__,
+                "print": print,
+                # Pre-import common modules for analysis
+                "json": __import__("json"),
+                "re": __import__("re"),
+                "ast": __import__("ast"),
+                "hashlib": __import__("hashlib"),
+                "os": __import__("os")
+            }
+            # Inject custom globals if provided
+            if params.custom_globals:
+                safe_globals.update(params.custom_globals)
 
-                # Execute code
-                with redirect_stdout(stdout) if params.capture_output else nullcontext(), \
-                     redirect_stderr(stderr) if params.capture_output else nullcontext():
-                    # Use timeout context manager (assuming time_limit is available or simulated)
-                    try:
-                        from contextlib import contextmanager
-                        @contextmanager
-                        def time_limit(seconds):
-                            import signal
-                            def signal_handler(signum, frame):
-                                raise TimeoutError("Execution timed out")
-                            signal.signal(signal.SIGALRM, signal_handler)
-                            signal.alarm(seconds)
-                            try:
-                                yield
-                            finally:
-                                signal.alarm(0)
-                        with time_limit(params.timeout):
-                            exec(params.code, safe_globals, local_vars)
-                    except ImportError:
-                        # Fallback if signal not available (e.g., Windows)
+            # Apply environment variables
+            if params.env_vars:
+                os.environ.update(params.env_vars)
+
+            # Execute code
+            with redirect_stdout(stdout) if params.capture_output else nullcontext(), \
+                 redirect_stderr(stderr) if params.capture_output else nullcontext():
+                # Use timeout context manager (assuming time_limit is available or simulated)
+                try:
+                    from contextlib import contextmanager
+                    @contextmanager
+                    def time_limit(seconds):
+                        import signal
+                        def signal_handler(signum, frame):
+                            raise TimeoutError("Execution timed out")
+                        signal.signal(signal.SIGALRM, signal_handler)
+                        signal.alarm(seconds)
+                        try:
+                            yield
+                        finally:
+                            signal.alarm(0)
+                    with time_limit(params.timeout):
                         exec(params.code, safe_globals, local_vars)
+                except ImportError:
+                    # Fallback if signal not available (e.g., Windows)
+                    exec(params.code, safe_globals, local_vars)
 
-                execution_time = time.time() - start_time
-                stdout_val = stdout.getvalue() if params.capture_output else ""
-                stderr_val = stderr.getvalue() if params.capture_output else ""
-                if len(stdout_val) > params.max_output_size:
-                    stdout_val = stdout_val[:params.max_output_size] + "... [truncated]"
-                if len(stderr_val) > params.max_output_size:
-                    stderr_val = stderr_val[:params.max_output_size] + "... [truncated]"
-                return {
-                    "success": True,
+            execution_time = time.time() - start_time
+            stdout_val = stdout.getvalue() if params.capture_output else ""
+            stderr_val = stderr.getvalue() if params.capture_output else ""
+            
+            if len(stdout_val) > params.max_output_size:
+                stdout_val = stdout_val[:params.max_output_size] + "... [truncated]"
+            if len(stderr_val) > params.max_output_size:
+                stderr_val = stderr_val[:params.max_output_size] + "... [truncated]"
+            
+            return create_success_response(
+                "Python code executed successfully",
+                data={
                     "stdout": stdout_val,
                     "stderr": stderr_val,
                     "execution_time": execution_time,
-                    "message": "Python code executed successfully"
+                    "local_vars": {k: str(v) for k, v in local_vars.items() if not k.startswith('_')}
                 }
-            except TimeoutError:
-                logger.warning(f"Python execution timed out after {params.timeout} seconds")
-                return {
-                    "success": False,
-                    "error": f"Execution timed out after {params.timeout} seconds",
+            )
+        except TimeoutError:
+            return create_error_response(
+                f"Code execution timed out after {params.timeout} seconds",
+                data={
                     "stdout": stdout.getvalue()[:params.max_output_size] if params.capture_output else "",
                     "stderr": stderr.getvalue()[:params.max_output_size] if params.capture_output else "",
                     "execution_time": time.time() - start_time
                 }
-            except SyntaxError as e:
-                logger.error(f"Python syntax error: {str(e)}")
-                return {
-                    "success": False,
-                    "error": f"Syntax error: {str(e)}",
+            )
+        except SyntaxError as e:
+            return create_error_response(
+                f"Python syntax error at line {e.lineno}: {e.msg}",
+                data={
                     "stdout": stdout.getvalue()[:params.max_output_size] if params.capture_output else "",
                     "stderr": stderr.getvalue()[:params.max_output_size] if params.capture_output else "",
-                    "execution_time": time.time() - start_time
+                    "execution_time": time.time() - start_time,
+                    "error_line": e.lineno,
+                    "error_text": e.text
                 }
-            except Exception as e:
-                logger.error(f"Python execution failed: {str(e)}")
-                return {
-                    "success": False,
-                    "error": f"Execution error: {str(e)}",
-                    "stdout": stdout.getvalue()[:params.max_output_size] if params.capture_output else "",
-                    "stderr": stderr.getvalue()[:params.max_output_size] if params.capture_output else "",
-                    "execution_time": time.time() - start_time
-                }
-            finally:
-                # Restore original working directory and environment
-                os.chdir(original_cwd)
-                if params.env_vars:
-                    for key in params.env_vars:
-                        os.environ.pop(key, None)
-                stdout.close()
-                stderr.close()
-        except ValidationError as e:
-            logger.error(f"Invalid parameters: {str(e)}")
-            return {"success": False, "error": f"Invalid parameters: {str(e)}", "execution_time": 0.0}
+            )
         except Exception as e:
-            logger.critical(f"Unexpected execution error: {str(e)}")
-            return {"success": False, "error": f"Unexpected error: {str(e)}", "execution_time": 0.0}
+            return create_error_response(
+                f"Code execution failed: {type(e).__name__}: {str(e)}",
+                data={
+                    "stdout": stdout.getvalue()[:params.max_output_size] if params.capture_output else "",
+                    "stderr": stderr.getvalue()[:params.max_output_size] if params.capture_output else "",
+                    "execution_time": time.time() - start_time,
+                    "error_type": type(e).__name__
+                }
+            )
+        finally:
+            # Restore original working directory and environment
+            os.chdir(original_cwd)
+            if params.env_vars:
+                for key in params.env_vars:
+                    os.environ.pop(key, None)
+            stdout.close()
+            stderr.close()
+
 

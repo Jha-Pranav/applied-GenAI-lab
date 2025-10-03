@@ -4,7 +4,7 @@
 __all__ = ['logger', 'ExecuteBashParams', 'ExecuteBashTool']
 
 # %% ../../nbs/buddy/backend/tools/system/execute_bash.ipynb 1
-from .base import BaseTool, ToolMetadata, ToolCategory
+from .base import BaseTool, ToolMetadata, ToolCategory, create_success_response, create_error_response, extract_validation_error, create_success_response, create_error_response
 
 import subprocess
 import os
@@ -101,13 +101,15 @@ class ExecuteBashTool(BaseTool):
     def execute(self, **kwargs) -> Dict[str, Any]:
         try:
             params = ExecuteBashParams(**kwargs)
-            
+        except ValidationError as e:
+            return create_error_response(f"Invalid parameters: {extract_validation_error(e)}")
+        except Exception as e:
+            return create_error_response(f"Parameter validation failed: {str(e)}")
+        
+        try:
             # Check permissions before execution
             if not self._check_permissions(params.command, params.working_dir):
-                return {
-                    "success": False, 
-                    "error": "Command execution cancelled by user due to permission requirements"
-                }
+                return create_error_response("Command execution cancelled by user due to permission requirements")
             
             shell = params.shell or "/bin/bash"
             
@@ -138,33 +140,66 @@ class ExecuteBashTool(BaseTool):
                         env={**os.environ, **(params.env_vars or {})} if params.env_vars else None
                     )
                     
-                    return {
-                        "success": retry_result.returncode == 0,
-                        "stdout": retry_result.stdout,
-                        "stderr": retry_result.stderr,
-                        "exit_status": retry_result.returncode,
-                        "summary": params.summary or f"Executed command with sudo: {retry_info['retry_command']}",
-                        "retried_with_sudo": True
-                    }
+                    if retry_result.returncode == 0:
+                        return create_success_response(
+                            f"Command executed successfully with elevated privileges",
+                            data={
+                                "stdout": retry_result.stdout,
+                                "stderr": retry_result.stderr,
+                                "exit_status": retry_result.returncode,
+                                "command": retry_info['retry_command'],
+                                "retried_with_sudo": True
+                            }
+                        )
+                    else:
+                        return create_error_response(
+                            f"Command failed even with elevated privileges (exit code {retry_result.returncode})",
+                            data={
+                                "stdout": retry_result.stdout,
+                                "stderr": retry_result.stderr,
+                                "exit_status": retry_result.returncode,
+                                "command": retry_info['retry_command'],
+                                "retried_with_sudo": True
+                            }
+                        )
             
-            return {
-                "success": result.returncode == 0,
-                "stdout": result.stdout,
-                "stderr": result.stderr,
-                "exit_status": result.returncode,
-                "summary": params.summary or f"Executed command: {params.command}"
-            }
+            if result.returncode == 0:
+                return create_success_response(
+                    f"Command executed successfully",
+                    data={
+                        "stdout": result.stdout,
+                        "stderr": result.stderr,
+                        "exit_status": result.returncode,
+                        "command": params.command
+                    }
+                )
+            else:
+                return create_error_response(
+                    f"Command failed with exit code {result.returncode}",
+                    data={
+                        "stdout": result.stdout,
+                        "stderr": result.stderr,
+                        "exit_status": result.returncode,
+                        "command": params.command
+                    }
+                )
             
         except subprocess.TimeoutExpired as e:
-            logger.warning(f"Command timed out: {params.command}")
-            return {"success": False, "error": f"Command timed out after {params.timeout} seconds"}
+            return create_error_response(
+                f"Command timed out after {params.timeout} seconds",
+                data={"command": params.command, "timeout": params.timeout}
+            )
         except subprocess.CalledProcessError as e:
-            logger.error(f"Subprocess error: {str(e)}")
-            return {"success": False, "error": f"Command execution failed: {str(e)}", "stdout": e.stdout, "stderr": e.stderr}
-        except ValidationError as e:
-            logger.error(f"Invalid parameters: {str(e)}")
-            return {"success": False, "error": f"Invalid parameters: {str(e)}"}
+            return create_error_response(
+                f"Command execution failed: {str(e)}",
+                data={
+                    "stdout": getattr(e, 'stdout', ''),
+                    "stderr": getattr(e, 'stderr', ''),
+                    "exit_status": e.returncode,
+                    "command": params.command
+                }
+            )
         except Exception as e:
-            logger.error(f"Unexpected execution error: {str(e)}")
-            return {"success": False, "error": f"Unexpected error: {str(e)}"}
+            return create_error_response(f"Unexpected execution error: {str(e)}")
+
 

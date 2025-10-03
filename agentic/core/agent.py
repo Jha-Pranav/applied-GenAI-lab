@@ -15,8 +15,6 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
-
 # %% ../../nbs/buddy/backend/core/agent.ipynb 2
 @dataclass
 class Message:
@@ -130,9 +128,11 @@ class Agent:
         # Add user message
         self.conversation_history.append(Message(role="user", content=message))
 
-        # Initialize result
+        # Initialize result and failed attempts tracking
         final_result = {"content": "", "tool_calls": [], "blocked": False}
         iteration_count = 0
+        failed_attempts = []  # Track failed tool calls: [(function_name, args, error), ...]
+
 
         while True:
             iteration_count += 1
@@ -194,19 +194,20 @@ class Agent:
             # Handle tool calls if present
             if result.get("tool_calls"):
                 logger.debug(f"Executing {len(result['tool_calls'])} tool calls")
-                executed_calls = self._execute_tool_calls(result["tool_calls"])
+                executed_calls = self._execute_tool_calls(result["tool_calls"], failed_attempts)
                 final_result["tool_calls"] = executed_calls
                 continue  # Continue loop to process tool results
                 
         # Optional : Clean tool call details from the history
-        self.conversation_history = [msg for msg in self.conversation_history if not (msg.role == "tool" or msg.tool_calls)]
+        # self.conversation_history = [msg for msg in self.conversation_history if not (msg.role == "tool" or msg.tool_calls)]
         # Limit conversation history # TODO :Handle this in a smarter way
         if len(self.conversation_history) > 50:
             self.conversation_history = [self.conversation_history[0]] + self.conversation_history[-49:]
 
         return final_result
 
-    def _execute_tool_calls(self, tool_calls: List[Dict]) -> List[Dict]:
+
+    def _execute_tool_calls(self, tool_calls: List[Dict], failed_attempts: List) -> List[Dict]:
         """Execute tool calls and append results to conversation history."""
         from agentic.tools.display import ToolExecutionDisplay
         display = ToolExecutionDisplay()
@@ -215,13 +216,34 @@ class Agent:
         for tool_call in tool_calls:
             function_name = tool_call["function"]["name"]
             tool_call_id = tool_call.get("id")
+            raw_arguments = tool_call["function"]["arguments"]
+            
             try:
-                arguments = json.loads(tool_call["function"]["arguments"])
+                arguments = json.loads(raw_arguments)
+                args_str = str(arguments)
             except json.JSONDecodeError as e:
                 logger.error(f"Invalid arguments for {function_name}: {str(e)}")
                 display.show_tool_error(f"Error in {function_name}", str(e))
                 tool_call["error"] = str(e)
+                failed_attempts.append((function_name, raw_arguments, str(e)))
                 executed_calls.append(tool_call)
+                continue
+
+            # Check if this exact call was already attempted and failed
+            if any(func == function_name and args == args_str for func, args, _ in failed_attempts):
+                error_msg = f"Already attempted: {function_name}({args_str}) - previously failed"
+                logger.warning(error_msg)
+                display.show_tool_error(f"Repeated attempt", error_msg)
+                tool_call["error"] = error_msg
+                executed_calls.append(tool_call)
+                
+                # Add to conversation history so LLM knows it was already tried
+                self.conversation_history.append(Message(
+                    role="tool",
+                    content=f"Error: {error_msg}\n\nPrevious failed attempts in this request:\n" + 
+                           "\n".join([f"- {func}({args}) failed: {err}" for func, args, err in failed_attempts]),
+                    tool_call_id=tool_call_id
+                ))
                 continue
 
             display.show_tool_start(function_name, trusted=True, args=arguments)
@@ -234,23 +256,32 @@ class Agent:
                 tool_call["result"] = result
                 executed_calls.append(tool_call)
                 if not result['success']:
-                    display.show_tool_error(f"Error in {function_name}", str(result['error']))
+                    error_msg = str(result['error'])
+                    display.show_tool_error(f"Error in {function_name}", error_msg)
+                    failed_attempts.append((function_name, args_str, error_msg))
                     
 
                 # Append tool result to conversation history
+                tool_content = str(result)
+                if not result['success'] and failed_attempts:
+                    tool_content += f"\n\nPrevious failed attempts in this request (feel free to check other tools as well if not working):\n"
+                    tool_content += "\n".join([f"- {func}({args}) failed: {err}" for func, args, err in failed_attempts])
+                
                 self.conversation_history.append(Message(
                     role="tool",
-                    content=str(result),
+                    content=tool_content,
                     tool_call_id=tool_call_id
                 ))
             except Exception as e:
-                logger.error(f"Error executing {function_name}: {str(e)}")
-                display.show_tool_error(f"Error in {function_name}", str(e))
-                tool_call["error"] = str(e)
+                error_msg = str(e)
+                logger.error(f"Error executing {function_name}: {error_msg}")
+                display.show_tool_error(f"Error in {function_name}", error_msg)
+                tool_call["error"] = error_msg
+                failed_attempts.append((function_name, args_str, error_msg))
                 executed_calls.append(tool_call)
         
         return executed_calls
-
+        
     def _get_available_tools(self) -> List[Dict]:
         """Get OpenAI-formatted tools for the configured tool names."""
         if self.config.tools:
