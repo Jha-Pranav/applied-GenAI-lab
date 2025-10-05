@@ -15,6 +15,7 @@ tags
 *.pkg
 mlartifacts
 mlruns
+_paper.*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

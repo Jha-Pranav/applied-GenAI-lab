@@ -255,8 +255,11 @@ class Agent:
                     result = self.tool_manager.execute_tool(function_name, arguments)
                 tool_call["result"] = result
                 executed_calls.append(tool_call)
-                if not result['success']:
-                    error_msg = str(result['error'])
+                if not result.get('success', True): 
+                    # TODO : FIX THIS - WE SHOULD NOT HAVE ANY DEFAULT VALUE HERE 
+                    # Default to True if success key missing
+                    # Handle both error formats: {"error": "..."} and {"success": False, "message": "..."}
+                    error_msg = str(result.get('message') or result.get('error', 'Unknown error'))
                     display.show_tool_error(f"Error in {function_name}", error_msg)
                     failed_attempts.append((function_name, args_str, error_msg))
                     

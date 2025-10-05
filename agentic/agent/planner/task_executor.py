@@ -203,7 +203,7 @@ EXECUTION DETAILS:
 Execute this action and provide detailed output. If a tool is specified, use it to perform the actual operation.
 """
         
-        result = self.agent.run(enriched_prompt, stream=False, max_iterations=5)
+        result = self.agent.run(enriched_prompt, stream=True, max_iterations=5)
         return result.get("content", "")
     
     def _introspect_action(self, task: Task, action: ActionStep, result: str) -> IntrospectionResult:

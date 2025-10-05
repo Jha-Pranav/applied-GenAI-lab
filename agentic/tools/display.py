@@ -4,6 +4,9 @@
 __all__ = ['ToolExecutionDisplay']
 
 # %% ../../nbs/buddy/backend/tools/display.ipynb 1
+__all__ = ['ToolExecutionDisplay']
+
+# %% ../../nbs/buddy/backend/tools/display.ipynb 1
 import json
 
 class ToolExecutionDisplay:
@@ -13,20 +16,33 @@ class ToolExecutionDisplay:
         """Show tool execution start with arguments"""
         trust_text = " (trusted)" if trusted else ""
         print(f"🛠️ Executing {tool_name}{trust_text}")
+        
+        if args is None:
+            print("args: None")
+            return
+            
         if tool_name == "execute_bash":   
-            if args:
-                print(f"Command: {args.get('command')}")
-                print(f"Summary : {args.get('summary')}")
+            print(f"Command: {args.get('command')}")
+            print(f"Summary: {args.get('summary')}")
+        elif tool_name == "fs_write":
+            print(f"Command: {args.get('command', 'N/A')}")
+            print(f"Path: {args.get('path', 'N/A')}")
+        elif tool_name == "fs_read":
+            print(f"Operations: {args.get('operations', 'N/A')}")
         else:
+            # Show first few key-value pairs for other tools
             if args:
-                print(f"args: {args.get('operations')}")
+                items = list(args.items())[:3]
+                for key, value in items:
+                    print(f"{key}: {value}")
     
     def show_tool_error(self, tool_name: str, error: str):
         """Show tool execution error"""
-        print(f"❌ {tool_name}: {error}")
+        print(f"❌ Error in {tool_name}: {error}")
     
     def show_tool_result(self, tool_name: str, result: dict):
         """Show tool execution result"""
         print(f"✅ {tool_name} result:")
         print(f"   {json.dumps(result, indent=2)}")
+
 

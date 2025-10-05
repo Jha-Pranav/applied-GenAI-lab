@@ -5,24 +5,17 @@ __all__ = ['RequestComplexity', 'AnalysisResult', 'BuddyClient', 'main']
 
 # %% ../nbs/buddy/frontend/client.ipynb 1
 import json
-import re
-import asyncio
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List
 from enum import Enum
 from dataclasses import dataclass
 from rich.console import Console
-from rich.markdown import Markdown
-from rich.theme import Theme
 from rich.panel import Panel
-from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from .tools.manager import ToolManager
-from .llms.client import LLMClient
+from .core.agent import Agent, AgentConfig
 from .configs.loader import get_model_config, get_settings_config, get_tools_config, get_reasoning_config
-from .configs.prompts import get_system_prompt
 
 
-# %% ../nbs/buddy/frontend/client.ipynb 2
 class RequestComplexity(Enum):
     SIMPLE = "simple"
     MODERATE = "moderate"
@@ -43,68 +36,41 @@ class BuddyClient:
     """Production-grade AI assistant with intelligent request routing"""
     
     def __init__(self, model: str = None, base_url: str = None, api_key: str = None):
-        # Load configurations from config.toml
+        # Load configurations
         self.model_config = get_model_config()
         self.settings_config = get_settings_config()
-        self.tools_config = get_tools_config()
-        self.reasoning_config = get_reasoning_config()
         
-        # Initialize LLM client with config values
-        self.llm_client = LLMClient(
-            model or self.model_config.get('name'),
-            base_url or self.model_config.get('url'),
-            api_key or self.model_config.get('api_key')
+        # Initialize tool manager
+        self.tool_manager = ToolManager()
+        
+        # Create agent config with routing instructions
+        agent_config = AgentConfig(
+            name="BuddyAgent",
+            instructions="""You are Buddy, an AI assistant that helps with various tasks using available tools.
+
+IMPORTANT ROUTING RULES:
+- For comparison questions, "which is better", "pros and cons", evaluation questions: Use the debate tool
+- For complex project requests like "build", "create", "develop", "implement": Use the planner tool  
+- For all other requests: Handle directly with available tools (fs_read, fs_write, execute_bash, code_interpreter)
+
+Always choose the most appropriate approach based on the request type.""",
+            model=model or self.model_config.get('name'),
+            temperature=self.model_config.get('temperature', 0.7),
+            max_tokens=self.model_config.get('max_tokens')
         )
         
-        # Initialize console for rich output
-        self.console = Console(theme=Theme({
-            "info": "cyan",
-            "warning": "yellow",
-            "error": "red",
-            "success": "green",
-            "highlight": "magenta"
-        }))
+        # Initialize single Agent for all operations
+        self.agent = Agent(config=agent_config)
         
-        # Initialize tool manager with core tools
-        self.tool_manager = self._initialize_tools()
+        # Initialize console
+        self.console = Console()
         
-        # Import actual agent implementations for streaming
-        from agentic.agent.planner.main import main as planner_main
-        from agentic.agent.debater import create_debate
-        
-        # Store references for later use
-        self.planner_main = planner_main
-        self.create_debate = create_debate
-        
-        # Conversation history
-        self.conversation_history: List[Dict[str, str]] = []
-        
-        # Settings from config
+        # Settings - force streaming to true
         self.auto_approve = self.settings_config.get('auto_approve', False)
-        self.stream = self.settings_config.get('stream', True)
+        self.stream = True  # Always enable streaming
         self.debug = self.settings_config.get('debug', False)
-        self.max_history = self.settings_config.get('max_history', 100)
-        
-        # Reasoning settings
-        self.show_thinking = self.reasoning_config.get('show_thinking', True)
-        self.retry_count = self.reasoning_config.get('retry_count', 2)
     
-    def _initialize_tools(self) -> ToolManager:
-        """Initialize core tools using existing ToolManager"""
-        tool_manager = ToolManager()
-        return tool_manager
-    
-    def is_tool_dangerous(self, tool_name: str) -> bool:
-        """Check if tool is marked as dangerous"""
-        tool_info = self.tool_manager.get_tool_info(tool_name)
-        return tool_info.get('is_dangerous', False) if tool_info else False
-    
-    def requires_approval(self, tool_name: str) -> bool:
-        """Check if tool requires approval"""
-        tool_info = self.tool_manager.get_tool_info(tool_name)
-        return tool_info.get('requires_approval', False) if tool_info else False
-    
-    async def analyze_request_complexity(self, request: str) -> AnalysisResult:
+    def analyze_request_complexity(self, request: str) -> AnalysisResult:
         """Analyze request complexity and determine routing strategy"""
         
         analysis_prompt = f"""
@@ -134,686 +100,277 @@ class BuddyClient:
         """
         
         try:
-            response = self.llm_client.create_completion(
-                messages=[{"role": "user", "content": analysis_prompt}],
-                stream=False,
-                temperature=0.1,
-                max_tokens=self.model_config.get('max_tokens'),
-                timeout=self.model_config.get('timeout', 60)
-            )
+            response = self.agent.run(analysis_prompt, stream=True, max_iterations=1)
+            content = response.get("content", "")
             
             # Extract JSON from response
-            content = response.choices[0].message.content
-            json_match = re.search(r'\{.*\}', content, re.DOTALL)
-            
-            if json_match:
-                analysis_data = json.loads(json_match.group())
+            try:
+                data = json.loads(content)
                 return AnalysisResult(
-                    complexity=RequestComplexity(analysis_data["complexity"]),
-                    confidence=analysis_data["confidence"],
-                    reasoning=analysis_data["reasoning"],
-                    requires_planning=analysis_data["requires_planning"],
-                    requires_debate=analysis_data["requires_debate"],
-                    suggested_tools=analysis_data["suggested_tools"]
+                    complexity=RequestComplexity(data.get("complexity", "simple")),
+                    confidence=data.get("confidence", 0.5),
+                    reasoning=data.get("reasoning", ""),
+                    requires_planning=data.get("requires_planning", False),
+                    requires_debate=data.get("requires_debate", False),
+                    suggested_tools=data.get("suggested_tools", [])
                 )
-            else:
-                # Fallback analysis
+            except (json.JSONDecodeError, ValueError):
                 return self._fallback_analysis(request)
                 
         except Exception as e:
-            if self.debug:
-                self.console.print(f"[error]Analysis error: {e}[/error]")
+            self.console.print(f"[red]Analysis error: {e}[/red]")
             return self._fallback_analysis(request)
     
     def _fallback_analysis(self, request: str) -> AnalysisResult:
-        """Fallback complexity analysis using heuristics"""
-        words = request.split()
+        """Fallback analysis using simple heuristics"""
         
-        # Simple heuristics
-        complexity_indicators = {
-            'simple': ['list', 'show', 'read', 'display', 'get'],
-            'moderate': ['create', 'write', 'modify', 'update', 'generate'],
-            'complex': ['build', 'develop', 'implement', 'design', 'architecture', 'system']
-        }
+        # Simple keyword-based analysis
+        debate_keywords = ["should", "debate", "pros and cons", "analysis", "perspectives"]
+        planning_keywords = ["build", "create", "develop", "implement", "project"]
         
-        scores = {'simple': 0, 'moderate': 0, 'complex': 0}
+        requires_debate = any(keyword in request.lower() for keyword in debate_keywords)
+        requires_planning = any(keyword in request.lower() for keyword in planning_keywords)
         
-        for word in words:
-            word_lower = word.lower()
-            for level, indicators in complexity_indicators.items():
-                if any(indicator in word_lower for indicator in indicators):
-                    scores[level] += 1
-        
-        # Determine complexity
-        max_score = max(scores.values())
-        if max_score == 0:
-            complexity = RequestComplexity.SIMPLE
+        if requires_debate:
+            complexity = RequestComplexity.MODERATE
+        elif requires_planning:
+            complexity = RequestComplexity.COMPLEX
         else:
-            complexity = RequestComplexity([k for k, v in scores.items() if v == max_score][0])
+            complexity = RequestComplexity.SIMPLE
         
         return AnalysisResult(
             complexity=complexity,
-            confidence=0.6,
-            reasoning="Heuristic analysis based on keywords",
-            requires_planning=complexity in [RequestComplexity.MODERATE, RequestComplexity.COMPLEX],
-            requires_debate='decision' in request.lower() or 'choose' in request.lower(),
-            suggested_tools=['fs_read', 'fs_write'] if any(word in request.lower() for word in ['file', 'code', 'script']) else []
+            confidence=0.7,
+            reasoning="Fallback heuristic analysis",
+            requires_planning=requires_planning,
+            requires_debate=requires_debate,
+            suggested_tools=[]
         )
     
-    async def execute_simple_request(self, request: str, suggested_tools: List[str]) -> Dict[str, Any]:
-        """Execute simple requests directly with tools"""
+    def execute_simple_request(self, request: str, suggested_tools: List[str]) -> Dict[str, Any]:
+        """Execute simple requests directly with Agent and tools"""
         
         self.console.print(Panel(
             f"[bold green]Executing simple request with direct tool usage[/bold green]",
             title="[bold yellow]🚀 Simple Execution[/bold yellow]",
-            border_style="yellow",
-            padding=(0, 1)
+            border_style="yellow"
         ))
         
-        # Prepare messages for LLM with tool calling
-        messages = [
-            {"role": "system", "content": get_system_prompt()},
-            {"role": "user", "content": request}
-        ]
-        
-        # Get available tools
-        available_tools = self.tool_manager.get_tools()
-        
         try:
-            # Call LLM with tools and config parameters
-            stream = self.settings_config.get('stream', True)
-            response = self.llm_client.create_completion(
-                messages=messages,
-                tools=available_tools,
-                stream=stream,
-                temperature=self.model_config.get('temperature', 0.7),
-                max_tokens=self.model_config.get('max_tokens'),
-                timeout=self.model_config.get('timeout', 60)
+            # Use Agent directly - it handles tool selection and execution
+            result = self.agent.run(
+                request, 
+                stream=self.stream,
+                max_iterations=5
             )
             
-            if stream:
-                result = self.llm_client.handle_streaming_response(response, self.console)
-                # Create message-like object from streaming result
-                class StreamMessage:
-                    def __init__(self, result):
-                        self.content = result.get('content', '')
-                        raw_tool_calls = result.get('tool_calls', [])
-                        # Convert dict tool_calls to object-like structure
-                        self.tool_calls = []
-                        for tc in raw_tool_calls:
-                            if tc and tc.get('function'):
-                                class ToolCall:
-                                    def __init__(self, tc_dict):
-                                        self.id = tc_dict.get('id', '')
-                                        self.type = tc_dict.get('type', 'function')
-                                        class Function:
-                                            def __init__(self, func_dict):
-                                                self.name = func_dict.get('name', '')
-                                                self.arguments = func_dict.get('arguments', '{}')
-                                        self.function = Function(tc_dict['function'])
-                                self.tool_calls.append(ToolCall(tc))
-                message = StreamMessage(result)
-            else:
-                result = self.llm_client.process_response(response, self.console)
-                message = result.get('message')
+            return {
+                "success": True,
+                "result": result.get("content", ""),
+                "tool_calls": result.get("tool_calls", []),
+                "execution_type": "simple"
+            }
             
-            # Handle tool calls
-            if message.tool_calls:
-                return await self._handle_tool_calls(message.tool_calls, messages)
-            else:
-                # Direct response - already printed by streaming/process_response
-                return {"success": True, "response": message.content}
-                
         except Exception as e:
-            error_msg = f"Simple execution failed: {str(e)}"
-            self.console.print(f"[error]{error_msg}[/error]")
-            return {"success": False, "error": error_msg}
+            self.console.print(f"[bold red]❌ Simple execution failed:[/bold red] {str(e)}")
+            return {
+                "success": False,
+                "error": str(e),
+                "execution_type": "simple"
+            }
     
-    async def execute_complex_request(self, request: str, analysis: AnalysisResult) -> Dict[str, Any]:
-        """Execute complex requests through planning and coordination"""
+    def execute_complex_request(self, request: str, analysis: AnalysisResult) -> Dict[str, Any]:
+        """Execute complex requests by routing to appropriate agents"""
         
         self.console.print(Panel(
-            f"[warning]Complex request detected - initiating planning phase[/warning]\n"
+            f"[warning]Complex request detected - routing to appropriate agent[/warning]\n"
             f"Complexity: {analysis.complexity.value}\n"
             f"Confidence: {analysis.confidence:.2f}\n"
             f"Reasoning: {analysis.reasoning}",
             title="🧠 Complex Execution"
         ))
         
-        results = {"success": True, "phases": []}
-        
-        # Phase 1: Planning (if required)
-        if analysis.requires_planning:
-            planning_result = await self._execute_planning_phase(request)
-            results["phases"].append({"phase": "planning", "result": planning_result})
-            
-            if not planning_result.get("success", False):
-                results["success"] = False
-                return results
-        
-        # Phase 2: Debate (if required)
-        if analysis.requires_debate:
-            debate_result = await self._execute_debate_phase(request)
-            results["phases"].append({"phase": "debate", "result": debate_result})
-        
-        # Phase 3: Execution
-        execution_result = await self._execute_with_coordination(request, analysis)
-        results["phases"].append({"phase": "execution", "result": execution_result})
-        
-        if not execution_result.get("success", False):
-            results["success"] = False
-        
-        return results
-    
-    async def _execute_planning_phase(self, request: str) -> Dict[str, Any]:
-        """Execute planning phase using planner agent"""
-        
-        self.console.print("[info]🔄 Initiating planning phase...[/info]")
-        
         try:
-            # Use actual planner from agentic/agent/planner
-            import asyncio
-            from agentic.agent.planner.executor import DynamicTaskExecutor
+            # Route to debate agent if debate is required
+            if analysis.requires_debate:
+                return self._execute_debate_phase(request)
             
-            executor = DynamicTaskExecutor()
-            planning_result = await executor.execute_project(request)
+            # Route to planner for moderate/complex planning tasks
+            elif analysis.requires_planning:
+                return self._execute_planning_phase(request)
             
-            if planning_result:
-                self.console.print("[success]✅ Planning completed successfully[/success]")
-                return {"success": True, "plan": planning_result}
+            # Fallback to simple execution
             else:
-                return {"success": False, "error": "Planning failed"}
-                self.console.print(f"[error]❌ Planning failed: {planning_result.get('error', 'Unknown error')}[/error]")
-                return {"success": False, "error": "Planning phase failed"}
+                return self.execute_simple_request(request, analysis.suggested_tools)
                 
         except Exception as e:
-            error_msg = f"Planning phase error: {str(e)}"
-            self.console.print(f"[error]{error_msg}[/error]")
-            return {"success": False, "error": error_msg}
-    
-    async def _execute_debate_phase(self, request: str) -> Dict[str, Any]:
-        """Execute debate phase for decision analysis"""
-        
-        self.console.print("[info]🔄 Initiating debate phase...[/info]")
-        
-        try:
-            # Use actual debater from agentic/agent/debater.py
-            debate_result = await self.create_debate(
-                topic=f"Decision analysis for: {request}",
-                context=f"User request: {request}"
-            )
-            
-            if debate_result:
-                self.console.print("[success]✅ Debate analysis completed[/success]")
-                return {"success": True, "analysis": debate_result}
-            else:
-                self.console.print("[warning]⚠️ Debate analysis had issues[/warning]")
-                return {"success": True, "warning": "Debate analysis incomplete"}
-                
-        except Exception as e:
-            error_msg = f"Debate phase error: {str(e)}"
-            self.console.print(f"[error]{error_msg}[/error]")
-            return {"success": False, "error": error_msg}
-    
-    async def _execute_with_coordination(self, request: str, analysis: AnalysisResult) -> Dict[str, Any]:
-        """Execute request with intelligent tool coordination"""
-        
-        self.console.print("[info]🔄 Executing with tool coordination...[/info]")
-        
-        # Use production-grade system prompt
-        messages = [
-            {"role": "system", "content": get_system_prompt()},
-            {"role": "user", "content": f"Execute this complex request: {request}"}
-        ]
-        
-        # Add conversation history for context
-        messages.extend(self.conversation_history[-5:])  # Last 5 messages for context
-        
-        try:
-            # Execute with tool coordination and config parameters
-            stream = self.settings_config.get('stream', True)
-            response = self.llm_client.create_completion(
-                messages=messages,
-                tools=self.tool_manager.get_tools(),
-                stream=stream,
-                temperature=self.model_config.get('temperature', 0.3),
-                max_tokens=self.model_config.get('max_tokens'),
-                timeout=self.model_config.get('timeout', 60)
-            )
-            
-            if stream:
-                result = self.llm_client.handle_streaming_response(response, self.console)
-                # Create message-like object from streaming result  
-                class StreamMessage:
-                    def __init__(self, result):
-                        self.content = result.get('content', '')
-                        raw_tool_calls = result.get('tool_calls', [])
-                        # Convert dict tool_calls to object-like structure
-                        self.tool_calls = []
-                        for tc in raw_tool_calls:
-                            if tc and tc.get('function'):
-                                class ToolCall:
-                                    def __init__(self, tc_dict):
-                                        self.id = tc_dict.get('id', '')
-                                        self.type = tc_dict.get('type', 'function')
-                                        class Function:
-                                            def __init__(self, func_dict):
-                                                self.name = func_dict.get('name', '')
-                                                self.arguments = func_dict.get('arguments', '{}')
-                                        self.function = Function(tc_dict['function'])
-                                self.tool_calls.append(ToolCall(tc))
-                message = StreamMessage(result)
-            else:
-                result = self.llm_client.process_response(response, self.console)
-                message = result.get('message')
-            
-            if message.tool_calls:
-                return await self._handle_tool_calls(message.tool_calls, messages)
-            else:
-                # Direct response - already printed by streaming/process_response
-                return {"success": True, "response": message.content}
-                
-        except Exception as e:
-            error_msg = f"Coordinated execution failed: {str(e)}"
-            self.console.print(f"[error]{error_msg}[/error]")
-            return {"success": False, "error": error_msg}
-    
-    def _execute_streaming_tool(self, tool_name: str, parameters: Dict) -> Dict[str, Any]:
-        """Execute streaming tools with real-time output"""
-        try:
-            if tool_name == "task_planner":
-                return self._stream_planner_output(parameters)
-            elif tool_name == "debate_agent":
-                return self._stream_debate_output(parameters)
-            else:
-                # Execute normally for other tools
-                result = self.tool_manager.execute_tool(tool_name, parameters)
-                return result
-                
-        except Exception as e:
-            return {"error": f"Streaming execution failed: {str(e)}"}
-    
-    def _stream_planner_output(self, parameters: Dict) -> Dict[str, Any]:
-        """Stream planner output using actual planner"""
-        try:
-            import asyncio
-            from agentic.agent.planner.executor import DynamicTaskExecutor
-            
-            request = parameters.get("request", "Unknown task")
-            self.console.print(f"[dim]🔄 Planning: {request}[/dim]")
-            
-            executor = DynamicTaskExecutor()
-            result = asyncio.run(executor.execute_project(request))
-            
-            # Stream the result
-            if result:
-                result_text = str(result)
-                import time
-                for char in result_text:
-                    self.console.print(char, end="", style="dim cyan")
-                    time.sleep(0.005)
-                self.console.print("\n")
-            
-            return {"success": True, "response": result}
-            
-        except Exception as e:
-            return {"error": f"Planner streaming failed: {str(e)}"}
-    
-    def _stream_debate_output(self, parameters: Dict) -> Dict[str, Any]:
-        """Stream debate output using actual debater"""
-        try:
-            import asyncio
-            
-            topic = parameters.get("topic", "Unknown topic")
-            context = parameters.get("context", "")
-            
-            self.console.print(f"[dim]🎯 Debating: {topic}[/dim]")
-            
-            # Use actual debater
-            result = asyncio.run(self.create_debate(topic=topic, context=context))
-            
-            # Stream the result
-            if result:
-                result_text = str(result)
-                import time
-                for char in result_text:
-                    self.console.print(char, end="", style="dim yellow")
-                    time.sleep(0.005)
-                self.console.print("\n")
-            
-            return {"success": True, "response": result}
-            
-        except Exception as e:
-            return {"error": f"Debate streaming failed: {str(e)}"}
-
-    def _get_tool_description(self, tool_name: str, parameters: Dict) -> str:
-        """Generate human-readable description of what the tool will do"""
-        descriptions = {
-            "execute_bash": f"run the following shell command:\n{parameters.get('command', 'unknown command')}",
-            "fs_read": self._get_fs_read_description(parameters),
-            "fs_write": f"write to file: {parameters.get('path', 'unknown path')}",
-            "code_interpreter": "execute Python code for analysis and computation",
-            "task_planner": f"analyze and create a detailed plan for: {parameters.get('request', 'complex task')}",
-            "debate_agent": f"perform multi-perspective analysis on: {parameters.get('topic', 'decision topic')}",
-            "introspect": "analyze project capabilities and structure"
-        }
-        return descriptions.get(tool_name, f"execute {tool_name}")
-    
-    def _get_fs_read_description(self, parameters: Dict) -> str:
-        """Get specific description for fs_read operations"""
-        operations = parameters.get('operations', [{}])
-        if not operations:
-            return "read unknown file"
-        
-        op = operations[0]
-        mode = op.get('mode', 'unknown')
-        path = op.get('path', 'unknown path')
-        
-        if mode == 'Directory':
-            return f"list directory contents: {path}"
-        elif mode == 'Line':
-            return f"read file contents: {path}"
-        elif mode == 'Search':
-            pattern = op.get('pattern', 'unknown pattern')
-            return f"search for '{pattern}' in: {path}"
-        else:
-            return f"read file or directory: {path}"
-
-    async def _handle_tool_calls(self, tool_calls: List, messages: List[Dict]) -> Dict[str, Any]:
-        """Handle tool calls with progress tracking and config-based approval"""
-        
-        results = []
-        
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            console=self.console
-        ) as progress:
-            
-            for tool_call in tool_calls:
-                task = progress.add_task(f"Executing {tool_call.function.name}...", total=1)
-                
-                try:
-                    # Parse tool parameters
-                    parameters = json.loads(tool_call.function.arguments)
-                    
-                    # Check if tool requires approval
-                    if (not self.auto_approve and 
-                        self.requires_approval(tool_call.function.name)):
-                        
-                        # Show tool details and ask for approval
-                        self.console.print(Panel(
-                            f"[bold yellow]Tool:[/bold yellow] {tool_call.function.name}\n"
-                            f"[bold yellow]Parameters:[/bold yellow] {json.dumps(parameters, indent=2)}\n"
-                            f"[bold yellow]Dangerous:[/bold yellow] {self.is_tool_dangerous(tool_call.function.name)}",
-                            title="[bold red]🔐 Tool Approval Required[/bold red]",
-                            border_style="red",
-                            padding=(0, 1)
-                        ))
-                        
-                        approval = input("Approve this tool execution? (y/n): ").lower().strip()
-                        if approval != 'y':
-                            results.append({
-                                "tool": tool_call.function.name,
-                                "success": False,
-                                "error": "Tool execution denied by user"
-                            })
-                            progress.update(task, completed=1)
-                            continue
-                    
-                    # Show tool execution in Amazon Q style
-                    self.console.print(f"\n[bold cyan]🛠️  Using tool:[/bold cyan] [bold]{tool_call.function.name}[/bold] [dim](trusted)[/dim]")
-                    self.console.print("[dim] ⋮[/dim]")
-                    
-                    # Show what the tool will do
-                    tool_description = self._get_tool_description(tool_call.function.name, parameters)
-                    self.console.print(f"[dim] ●[/dim] [bold]I will {tool_description}[/bold]")
-                    
-                    # Check if this is a streaming tool
-                    if tool_call.function.name in ["task_planner", "debate_agent"]:
-                        self.console.print(f"[dim]Streaming {tool_call.function.name} output...[/dim]\n")
-                        result = self._execute_streaming_tool(tool_call.function.name, parameters)
-                    else:
-                        # Execute tool normally
-                        result = self.tool_manager.execute_tool(
-                            tool_call.function.name, 
-                            parameters
-                        )
-                    
-                    results.append({
-                        "tool": tool_call.function.name,
-                        "success": not result.get("error"),
-                        "result": result
-                    })
-                    
-                    # Add tool result to messages for context
-                    messages.append({
-                        "role": "tool",
-                        "tool_call_id": tool_call.id,
-                        "content": json.dumps(result)
-                    })
-                    
-                    progress.update(task, completed=1)
-                    
-                    if result.get("error"):
-                        self.console.print(f"[bold red]❌ Tool {tool_call.function.name} failed:[/bold red] {result['error']}")
-                    else:
-                        self.console.print(f"[bold green]✅ {tool_call.function.name} completed[/bold green]")
-                        
-                except Exception as e:
-                    error_msg = f"Tool execution error: {str(e)}"
-                    self.console.print(f"[error]{error_msg}[/error]")
-                    results.append({
-                        "tool": tool_call.function.name,
-                        "success": False,
-                        "error": error_msg
-                    })
-                    progress.update(task, completed=1)
-        
-        # Get final response from LLM with tool results
-        try:
-            final_response = self.llm_client.create_completion(
-                messages=messages,
-                stream=False,
-                temperature=self.model_config.get('temperature', 0.2)
-            )
-            
-            final_content = final_response.choices[0].message.content
-            self.console.print(Markdown(final_content))
-            
-            return {
-                "success": all(r.get("success", False) for r in results),
-                "tool_results": results,
-                "final_response": final_content
-            }
-            
-        except Exception as e:
+            self.console.print(f"[bold red]❌ Complex execution failed:[/bold red] {str(e)}")
             return {
                 "success": False,
-                "tool_results": results,
-                "error": f"Final response generation failed: {str(e)}"
+                "error": str(e),
+                "execution_type": "complex"
             }
     
-    async def process_request(self, request: str) -> Dict[str, Any]:
-        """Main request processing pipeline"""
-        
-        self.console.print(Panel(
-            f"[bold cyan]Processing request:[/bold cyan] {request}",
-            title="[bold blue]🤖 Buddy AI[/bold blue]",
-            border_style="blue",
-            padding=(0, 1)
-        ))
-        
-        # Add to conversation history with config-based limit
-        self.conversation_history.append({"role": "user", "content": request})
-        
-        # Trim history if it exceeds max_history from config
-        if len(self.conversation_history) > self.max_history:
-            # Keep system message and trim from the beginning
-            self.conversation_history = self.conversation_history[-self.max_history:]
+    def _execute_planning_phase(self, request: str) -> Dict[str, Any]:
+        """Execute planning phase using planner agent"""
         
         try:
-            # Step 1: Analyze request complexity
-            analysis = await self.analyze_request_complexity(request)
+            from agentic.agent.planner.executor import DynamicTaskExecutor
             
-            if self.debug:
-                self.console.print(f"[info]Analysis: {analysis.complexity.value} (confidence: {analysis.confidence:.2f})[/info]")
+            executor = DynamicTaskExecutor(self.agent, self.console)
+            result = executor.execute(request)
             
-            # Step 2: Route based on complexity
-            if analysis.complexity == RequestComplexity.SIMPLE:
-                result = await self.execute_simple_request(request, analysis.suggested_tools)
-            else:
-                result = await self.execute_complex_request(request, analysis)
+            # Display completion message
+            self.console.print(Panel(
+                "[bold green]✅ Planning and execution completed![/bold green]",
+                title="Planning Results",
+                border_style="green"
+            ))
             
-            # Step 3: Add result to conversation history
-            if result.get("success", False):
-                response_content = result.get("response", result.get("final_response", "Task completed"))
-                self.conversation_history.append({"role": "assistant", "content": response_content})
+            return {
+                "success": True,
+                "result": result,
+                "execution_type": "planning"
+            }
             
-            return result
+        except Exception as e:
+            self.console.print(f"[bold red]❌ Planning failed:[/bold red] {str(e)}")
+            return {
+                "success": False,
+                "error": str(e),
+                "execution_type": "planning"
+            }
+    
+    def _execute_debate_phase(self, request: str) -> Dict[str, Any]:
+        """Execute debate phase using debate agent"""
+        
+        try:
+            from agentic.agent.debater import create_debate
+            import asyncio
+            
+            # Run debate asynchronously
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            
+            try:
+                result = loop.run_until_complete(
+                    create_debate(
+                        topic=f"Analysis: {request}",
+                        context=f"User request: {request}",
+                        max_rounds=2
+                    )
+                )
+            finally:
+                loop.close()
+            
+            # Display completion message
+            self.console.print(Panel(
+                "[bold green]✅ Debate analysis completed![/bold green]",
+                title="Debate Results",
+                border_style="green"
+            ))
+            
+            return {
+                "success": True,
+                "result": result,
+                "execution_type": "debate"
+            }
+            
+        except Exception as e:
+            self.console.print(f"[bold red]❌ Debate failed:[/bold red] {str(e)}")
+            return {
+                "success": False,
+                "error": str(e),
+                "execution_type": "debate"
+            }
+    
+    def process_request(self, request: str) -> Dict[str, Any]:
+        """Main request processing pipeline - single step execution"""
+        
+        self.console.print(Panel(
+            f"[bold cyan]Processing:[/bold cyan] {request}",
+            title="[bold blue]🤖 Buddy AI[/bold blue]",
+            border_style="blue"
+        ))
+        
+        try:
+            # Single step execution - Agent decides routing internally
+            result = self.agent.run(
+                request, 
+                stream=self.stream,
+                max_iterations=5
+            )
+            
+            return {
+                "success": True,
+                "result": result.get("content", ""),
+                "tool_calls": result.get("tool_calls", []),
+                "execution_type": "direct"
+            }
             
         except Exception as e:
             error_msg = f"Request processing failed: {str(e)}"
-            self.console.print(f"[error]{error_msg}[/error]")
+            self.console.print(f"[red]❌ {error_msg}[/red]")
             return {"success": False, "error": error_msg}
     
-    def display_config(self):
-        """Display current configuration"""
-        self.console.print(Panel(
-            f"[bold]Model Configuration:[/bold]\n"
-            f"• Model: {self.model_config.get('name')}\n"
-            f"• URL: {self.model_config.get('url')}\n"
-            f"• Temperature: {self.model_config.get('temperature')}\n"
-            f"• Timeout: {self.model_config.get('timeout')}s\n\n"
-            f"[bold]Settings:[/bold]\n"
-            f"• Auto Approve: {self.auto_approve}\n"
-            f"• Stream: {self.stream}\n"
-            f"• Debug: {self.debug}\n"
-            f"• Max History: {self.max_history}\n\n"
-            f"[bold]Tools:[/bold]\n"
-            f"• Available: {', '.join(self.tool_manager.list_tools())}\n"
-            f"• Dangerous: {', '.join(self.tools_config.get('dangerous_tools', []))}\n"
-            f"• Require Approval: {', '.join(self.tools_config.get('require_approval', []))}\n\n"
-            f"[bold]Reasoning:[/bold]\n"
-            f"• Show Thinking: {self.show_thinking}\n"
-            f"• Retry Count: {self.retry_count}",
-            title="🔧 Configuration"
-        ))
-    
-    async def interactive_session(self):
-        """Interactive chat session with config integration"""
+    def interactive_session(self):
+        """Start interactive chat session"""
         
         self.console.print(Panel(
-            f"[bold green]Welcome to Buddy AI![/bold green]\n"
-            f"I'm your intelligent assistant with adaptive complexity handling.\n\n"
-            f"[bold]Available Commands:[/bold]\n"
-            f"• Type your request to get started\n"
-            f"• '/config' - Show current configuration\n"
-            f"• '/tools' - List available tools\n"
-            f"• '/history' - Show conversation history\n"
-            f"• '/clear' - Clear conversation history\n"
-            f"• 'quit' or 'exit' - End the session\n\n"
-            f"[bold cyan]Current Model:[/bold cyan] {self.model_config.get('name')}\n"
-            f"[bold cyan]Auto Approve:[/bold cyan] {self.auto_approve}",
-            title="[bold blue]🤖 Buddy AI Assistant[/bold blue]",
-            border_style="blue",
-            padding=(0, 1)
+            "[bold green]Welcome to Buddy AI![/bold green]\n"
+            "Type your requests and I'll help you with various tasks.\n"
+            "Commands: /quit to exit, /clear to clear history",
+            title="🤖 Buddy AI Assistant",
+            border_style="green"
         ))
         
         while True:
             try:
-                # Get user input
-                user_input = input("\n💬 You: ").strip()
+                # Multi-line input handling
+                self.console.print("\n💬 You: ", end="")
+                lines = []
+                while True:
+                    try:
+                        line = input()
+                        if line.strip() == "":  # Empty line ends input
+                            break
+                        lines.append(line)
+                    except EOFError:  # Ctrl+D ends input
+                        break
                 
-                if user_input.lower() in ['quit', 'exit', 'bye']:
-                    self.console.print("[info]👋 Goodbye![/info]")
-                    break
+                user_input = "\n".join(lines).strip()
                 
                 if not user_input:
                     continue
                 
-                # Handle special commands
-                if user_input.startswith('/'):
-                    await self._handle_command(user_input)
+                # Handle commands
+                if user_input.lower() in ['/quit', '/exit', 'quit', 'exit']:
+                    self.console.print("[yellow]👋 Goodbye![/yellow]")
+                    break
+                elif user_input.lower() in ['/clear', 'clear']:
+                    self.console.clear()
                     continue
                 
-                # Process request
-                result = await self.process_request(user_input)
+                # Process the request
+                result = self.process_request(user_input)
                 
                 if not result.get("success", False):
-                    self.console.print(f"[error]❌ Error: {result.get('error', 'Unknown error')}[/error]")
+                    self.console.print(f"[red]❌ Error: {result.get('error', 'Unknown error')}[/red]")
                 
             except KeyboardInterrupt:
-                self.console.print("\n[warning]Session interrupted by user[/warning]")
+                self.console.print("\n[yellow]👋 Goodbye![/yellow]")
                 break
             except Exception as e:
-                self.console.print(f"[error]Session error: {str(e)}[/error]")
-    
-    async def _handle_command(self, command: str):
-        """Handle special commands"""
-        cmd = command.lower().strip()
-        
-        if cmd == '/config':
-            self.display_config()
-        elif cmd == '/tools':
-            tools = self.tool_manager.list_tools()
-            self.console.print(Panel(
-                f"[bold]Available Tools ({len(tools)}):[/bold]\n" + 
-                "\n".join([f"• {tool}" for tool in tools]),
-                title="🛠️ Tools"
-            ))
-        elif cmd == '/history':
-            if self.conversation_history:
-                history_text = "\n".join([
-                    f"[bold]{msg['role'].title()}:[/bold] {msg['content'][:100]}{'...' if len(msg['content']) > 100 else ''}"
-                    for msg in self.conversation_history[-10:]  # Last 10 messages
-                ])
-                self.console.print(Panel(history_text, title="📜 Recent History"))
-            else:
-                self.console.print("[info]No conversation history yet[/info]")
-        elif cmd == '/clear':
-            self.conversation_history.clear()
-            self.console.print("[success]✅ Conversation history cleared[/success]")
-        else:
-            self.console.print(f"[error]Unknown command: {command}[/error]")
+                self.console.print(f"[red]❌ Session error: {e}[/red]")
 
 
-async def main():
-    """Main entry point with config integration"""
-    import argparse
-    
-    parser = argparse.ArgumentParser(description="Buddy AI Assistant")
-    parser.add_argument("-c", "--command", help="Single command to execute")
-    parser.add_argument("--model", help="Override LLM model from config")
-    parser.add_argument("--base-url", help="Override LLM base URL from config")
-    parser.add_argument("--debug", action="store_true", help="Enable debug mode")
-    parser.add_argument("--auto-approve", action="store_true", help="Auto-approve all tool executions")
-    parser.add_argument("--config", action="store_true", help="Show configuration and exit")
-    
-    args = parser.parse_args()
-    
-    # Initialize client with config
-    client = BuddyClient(model=args.model, base_url=args.base_url)
-    
-    # Override settings if provided
-    if args.debug:
-        client.debug = True
-    if args.auto_approve:
-        client.auto_approve = True
-    
-    # Show config and exit if requested
-    if args.config:
-        client.display_config()
-        return
-    
-    if args.command:
-        # Single command execution
-        client.console.print(f"[info]Executing command with model: {client.model_config.get('name')}[/info]")
-        result = await client.process_request(args.command)
-        if not result.get("success", False):
-            exit(1)
-    else:
-        # Interactive session
-        await client.interactive_session()
+def main():
+    """Main entry point"""
+    try:
+        client = BuddyClient()
+        client.interactive_session()
+    except Exception as e:
+        print(f"❌ Failed to start Buddy AI: {e}")
+
 
 

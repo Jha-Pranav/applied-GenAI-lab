@@ -271,6 +271,7 @@ class FsWriteTool(BaseTool):
 
     def execute(self, **kwargs) -> Dict[str, Any]:
         try:
+            logger.info(f"fs_write.execute called with kwargs: {kwargs}")
             if isinstance(kwargs.get('params'), dict):
                 return self._execute_internal(kwargs['params'])
             else:
@@ -337,5 +338,6 @@ class FsWriteTool(BaseTool):
             return create_error_response(f"Failed to write file '{file_path}': {str(e)}")
         except Exception as e:
             return create_error_response(f"Unexpected error writing file: {str(e)}")
+
 
 
