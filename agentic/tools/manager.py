@@ -12,8 +12,8 @@ from .fs_read import FsReadTool
 from .fs_write import FsWriteTool
 from .execute_bash import ExecuteBashTool
 from .code_interpreter import CodeInterpreterTool
-from .debate_agent import DebateAgentTool
-from .task_planner import TaskPlannerTool
+from .debate import DebateTool
+from .planner import PlannerTool
 
 
 # %% ../../nbs/buddy/backend/tools/core/manager.ipynb 2
@@ -36,15 +36,12 @@ class ToolManager:
             
             # Analysis tools
             CodeInterpreterTool(),
-
             
             # Intelligence tools
-
-            DebateAgentTool(),
-
+            DebateTool(),
             
             # Planning tools
-            TaskPlannerTool()
+            PlannerTool()
         ]
         
         for tool in default_tools:
@@ -73,5 +70,6 @@ class ToolManager:
     def unregister_tool(self, tool_name: str):
         """Unregister a tool"""
         self.registry.unregister_tool(tool_name)
+
 
 

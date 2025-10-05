@@ -15,7 +15,13 @@ from ...configs.prompts import AnalyzerPrompts
 # %% ../../../nbs/buddy/backend/agents/planner/analyzier.ipynb 2
 class AgentTaskAnalyzer:
     def __init__(self, model: str = None, base_url: str = None, api_key: str = None):
-        self.llm_client = LLMClient(model=model, base_url=base_url, api_key=api_key)
+        # Initialize agent with default config
+        agent_config = AgentConfig(
+            name="planner_analyzer",
+            instructions="You are a project analysis expert. Analyze requirements and suggest appropriate frameworks.",
+            model=model
+        )
+        self.agent = Agent(agent_config)
         self.console = Console()
 
     def analyze(self, user_input: str) -> AnalysisResult:
@@ -35,9 +41,7 @@ class AgentTaskAnalyzer:
                 tasks = self._decompose_tasks(user_input, complexity)
             
             print(f"✅ Created {len(tasks)} tasks")
-            
 
-            
             # Step 4: Identify required Buddy tools
             buddy_tools = list(set([tool for task in tasks for tool in task.buddy_tools]))
             
@@ -338,13 +342,9 @@ class AgentTaskAnalyzer:
         return criteria
 
     def _call_llm(self, prompt: str) -> str:
-        """Call LLM using llm_factory with streaming"""
+        """Call LLM using agent with streaming"""
         try:
-            messages = [{"role": "user", "content": prompt}]
-            response = self.llm_client.create_completion(messages=messages, tools=None, stream=True)
-            
-            # Use llm_factory's streaming handler
-            result = self.llm_client.handle_streaming_response(response, self.console)
+            result = self.agent.run(prompt, stream=True)
             return result.get("content", "")
             
         except Exception as e:

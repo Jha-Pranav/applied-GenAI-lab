@@ -30,7 +30,7 @@ This aligns with the emerging shift toward **experience-driven agents** capable 
 
 ---
 
-## 🎯 Project Objectives
+## 🎯 Project Overview
 
 ### Vision: **Autonomous Software Engineering at Scale**
 
@@ -617,152 +617,40 @@ For detailed execution flow including complexity analysis, planning phases, vali
 5. **Validation Gates** → Pre/post-execution validation, success criteria checking
 6. **Error Recovery** → No task skipping, partial success tracking, comprehensive logging
 
-## 🧠 Core Capabilities
+| Topic | Description |
+|-------|-------------|
+| **[Architecture](docs/ARCHITECTURE.md)** | System design, execution flow, and core capabilities |
+| **[Agents & Tools](docs/AGENTS_AND_TOOLS.md)** | BuddyAgent, DebateAgent, TaskPlanner, and tool ecosystem |
+| **[Usage Guide](docs/USAGE.md)** | Examples, features, and advanced usage patterns |
+| **[Configuration](docs/CONFIGURATION.md)** | Setup options, custom tools, and performance monitoring |
+| **[Project Structure](docs/PROJECT_STRUCTURE.md)** | Directory layout and component organization |
 
-### 1. Intelligent Request Analysis
+## 🤖 Core Components
 
-The system automatically analyzes request complexity and routes to appropriate execution strategies:
+- **🎯 BuddyAgent**: Unified orchestrator with intelligent routing
+- **🛠️ 6 Core Tools**: File system, execution, and intelligence tools
+- **🧠 2 Specialized Agents**: DebateAgent for analysis, TaskPlanner for projects
+- **⚡ Real-time Streaming**: Live responses with thinking process visibility
 
-- **Simple**: Direct tool execution
-- **Moderate**: Planning with tool coordination  
-- **Complex**: Multi-phase execution with debate analysis
-
-### 2. Comprehensive Tool Ecosystem
-
-#### File System Tools
-- **`fs_read`**: Advanced file discovery and content extraction with Git integration
-- **`fs_write`**: Intelligent file operations with diff preview and validation
-
-#### Execution Tools  
-- **`execute_bash`**: Secure shell command execution with environment control
-- **`code_interpreter`**: Safe Python code execution with output capture
-
-#### Intelligence Tools
-- **`debate_agent`**: Multi-perspective analysis for complex decisions
-- **`task_planner`**: Intelligent task breakdown and execution planning
-
-### 3. Multi-Agent Coordination
-
-#### Debate Agent
-```python
-# Structured debate with multiple perspectives
-result = debate_agent(
-    topic="Should AI be regulated?",
-    context="Government policy discussion",
-    perspectives=["security", "innovation", "ethics"]
-)
-```
-
-#### Task Planner
-```python
-# Intelligent task planning
-plan = task_planner(
-    request="Build a web API with authentication and database integration"
-)
-```
-
-## 📋 Usage Examples
-
-### Simple Request
-```bash
-# Direct tool usage for simple tasks
-"Read the config file and show me the database settings"
-```
-
-### Moderate Request  
-```bash
-# Planning phase with tool coordination
-"Create a Python web API with 3 endpoints for user management"
-```
-
-### Complex Request
-```bash
-# Multi-phase execution with debate analysis
-"Should we migrate our monolith to microservices? Analyze pros and cons"
-```
-
-## 🔧 Advanced Features
-
-### Streaming Output
-Real-time response streaming with visual progress indicators:
-
-```
-🛠️ Using tool: task_planner (trusted)
-⋮
-● I will analyze and create a detailed plan for: Build healthcare system
-
-🤔 Thinking...
-[Character-by-character streaming output]
-```
-
-### Tool Approval Workflow
-Configurable approval system for sensitive operations:
-
-```
-⚠️  Tool requires approval: execute_bash
-Command: rm -rf /tmp/cache
-[y/N]: y
-```
-
-### Conversation History
-Persistent conversation history with context management:
+## 💡 Example Usage
 
 ```bash
-# View conversation history
-/history
+# Simple file operation
+"Read the README.md file"
 
-# Clear conversation history  
-/clear
+# Comparison analysis  
+"Which is better Python or JavaScript?"
+
+# Complex project
+"Create a REST API with authentication"
 ```
 
-## 🏗️ Project Structure
+## 🔧 System Architecture
 
 ```
-applied-GenAI-lab/
-├── main.py                     # Entry point
-├── agentic/                    # Core system
-│   ├── frontend/
-│   │   ├── client.py          # BuddyClient (main orchestrator)
-│   │   └── agent_tools.py     # Agent tool wrappers
-│   ├── agent/                 # AI Agents
-│   │   ├── debater.py         # Multi-perspective debate agent
-│   │   └── planner/           # Task planning system
-│   │       ├── main.py        # Planner entry point
-│   │       ├── executor.py    # Task execution coordinator
-│   │       ├── task_generator.py # Task generation engine
-│   │       ├── validation.py  # Pre-execution validation
-│   │       └── models.py      # Data models
-│   ├── tools/                 # Tool ecosystem
-│   │   ├── manager.py         # Tool registry and execution
-│   │   ├── fs_read.py         # File system reading
-│   │   ├── fs_write.py        # File system writing
-│   │   ├── execute_bash.py    # Shell command execution
-│   │   ├── code_interpreter.py # Python code execution
-│   │   ├── debate_agent.py    # Debate tool wrapper
-│   │   └── task_planner.py    # Planning tool wrapper
-│   ├── configs/               # Configuration management
-│   │   ├── config.toml        # Main configuration
-│   │   ├── loader.py          # Config loading
-│   │   └── prompts.py         # System prompts
-│   └── llms/                  # LLM integration
-│       └── client.py          # OpenAI-compatible client
-├── task_analyzer/             # Standalone task analyzer
-│   ├── main.py               # Task analysis entry point
-│   └── README_TECHNICAL.md   # Technical documentation
-└── benchmark/                # Performance benchmarks
-    └── test_prompts.md       # Test scenarios
-```
-
-## 🔄 Execution Flow
-
-### 1. Request Processing
-```python
-# User input → BuddyClient
-request = "Create a web API with authentication"
-
-# Complexity analysis
-analysis = await client.analyze_request_complexity(request)
-# Result: complexity="moderate", requires_planning=true
+Request → BuddyAgent → Intelligent Routing
+                    ↓
+    Simple: Direct Tools | Comparison: Debate | Complex: Planner
 ```
 
 ### 2. Intelligent Routing

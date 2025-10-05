@@ -30,10 +30,7 @@ class DynamicTaskExecutor:
         self.model = model
         config = AgentConfig(
             name="dynamic_executor",
-            instructions="You are an AI agent that executes tasks systematically. Analyze requirements, break down complex problems, and provide detailed technical responses with proper implementation.",
-            model=model,
-            tools=["fs_read", "fs_write", "execute_bash"],
-            temperature=0.7
+            instructions="You are an AI agent that executes tasks systematically. Analyze requirements, break down complex problems, and provide detailed technical responses with proper implementation."
         )
         self.agent = Agent(config)
         self.console = Console()

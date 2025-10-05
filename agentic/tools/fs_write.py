@@ -13,7 +13,7 @@ import re
 import logging
 import difflib
 from typing import Dict, Any
-from .base import BaseTool, ToolMetadata, ToolCategory
+from .base import BaseTool, ToolMetadata, ToolCategory, create_success_response, create_error_response, extract_validation_error
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -271,80 +271,73 @@ class FsWriteTool(BaseTool):
 
     def execute(self, **kwargs) -> Dict[str, Any]:
         try:
+            logger.info(f"fs_write.execute called with kwargs: {kwargs}")
             if isinstance(kwargs.get('params'), dict):
                 return self._execute_internal(kwargs['params'])
             else:
                 return self._execute_internal(kwargs)
         except Exception as e:
             logger.error(f"Execute failure: {e}")
-            return{"success": False, "data": [], "error": {"type": "ExecuteError", "message": str(e)}}
+            return create_error_response(f"Execution failed: {str(e)}")
 
     def _execute_internal(self, params: Dict[str, Any]) -> Dict:
         if not isinstance(params, dict):
-            return {
-                "success": False,
-                "data": [],
-                "error": {"type": "InvalidInput", "message": "Params must be a dictionary"}
-            }
+            return create_error_response("Parameters must be a dictionary")
         if "command" not in params or "path" not in params:
-            return {
-                "success": False,
-                "data": [],
-                "error": {"type": "InvalidInput", "message": "command and path are required"}
-            }
+            return create_error_response("Both 'command' and 'path' parameters are required")
+        
         file_path = params["path"]
-        result = {"command": params["command"], "path": file_path, "data": None, "error": None}
+        
+        # Validate file path
+        if not file_path or not isinstance(file_path, str):
+            return create_error_response("File path must be a non-empty string")
+        
         apply_result = self._apply_operation(file_path, params)
         if "error" in apply_result:
-            result["error"] = {"type": "EditError", "message": apply_result["error"]}
-            return {"success": False, "data": [result], "error": result["error"]}
+            return create_error_response(f"Operation failed: {apply_result['error']}")
+        
         new_content = apply_result["content"]
         original_content = apply_result["original_content"]
+        
         if params.get("show_diff", True):
             diff = self._generate_diff(original_content, new_content, file_path)
             logger.info(diff)
-        if apply_result["result"]["status"] == "no changes" or apply_result["result"].get("error"):
-            result["data"] = {
-                "path": file_path,
-                "status": apply_result["result"]["status"],
-                "size": len(original_content.encode('utf-8')) if original_content else 0,
-                "operation": apply_result["result"]
-            }
-            return {
-                "success": True,
-                "data": [result],
-                "error": None,
-                "metadata": {
-                    "processed_files": 0,
-                    "description": "No changes applied; no files written."
-                }
-            }
+        
+        if apply_result["result"]["status"] == "no changes":
+            return create_success_response(
+                message="No changes needed - file already matches desired state",
+                data={
+                    "path": file_path,
+                    "status": "no_changes",
+                    "size": len(original_content.encode('utf-8')) if original_content else 0
+                },
+                processed_files=0
+            )
+        
         if not params.get("trusted", False):
-            logger.warning("Trusted is False; in production, this would prompt for confirmation. Assuming approval for refactoring demo.")
+            logger.warning("Trusted is False; assuming approval for operation")
+        
         try:
             path_obj = Path(file_path)
             path_obj.parent.mkdir(parents=True, exist_ok=True)
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(new_content)
-            result["data"] = {
-                "path": file_path,
-                "status": "edited",
-                "size": len(new_content.encode('utf-8')),
-                "operation": apply_result["result"]
-            }
+            
+            return create_success_response(
+                message=f"Successfully {apply_result['result']['status']} file: {file_path}",
+                data={
+                    "path": file_path,
+                    "status": apply_result["result"]["status"],
+                    "size": len(new_content.encode('utf-8')),
+                    "operation": apply_result["result"]
+                },
+                processed_files=1
+            )
+            
         except (OSError, PermissionError) as e:
-            result["error"] = {"type": "WriteError", "message": f"Failed to write {file_path}: {str(e)}"}
-            logger.error(result["error"]["message"])
+            return create_error_response(f"Failed to write file '{file_path}': {str(e)}")
         except Exception as e:
-            result["error"] = {"type": "UnexpectedError", "message": str(e)}
-            logger.error(str(e))
-        return {
-            "success": result["error"] is None,
-            "data": [result],
-            "error": result["error"],
-            "metadata": {
-                "processed_files": 1 if result["error"] is None else 0,
-                "description": "Results ready for chaining: Use 'data[].path' for execute_bash (e.g., git add)."
-            }
-        }
+            return create_error_response(f"Unexpected error writing file: {str(e)}")
+
+
 

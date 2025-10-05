@@ -4,9 +4,6 @@
 __all__ = ['logger', 'ToolCallMode', 'FsReadOperation', 'FsReadParams', 'FsReadTool']
 
 # %% ../../nbs/buddy/backend/tools/filesystem/fs_read.ipynb 1
-__all__ = ['logger', 'ToolCallMode', 'FsReadOperation', 'FsReadParams', 'FsReadTool']
-
-# %% ../../nbs/buddy/backend/tools/filesystem/fs_read.ipynb 1
 import os
 import re
 import time
@@ -17,10 +14,14 @@ import fnmatch
 import json
 from pydantic import BaseModel, field_validator, Field, ValidationInfo, ValidationError
 from enum import Enum
-from collections import defaultdict
+from .base import create_success_response, create_error_response, extract_validation_error
+from .base import BaseTool, ToolMetadata, ToolCategory
 
-# Set up logging (configurable level)
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# Set up logging with a clear format
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
 class ToolCallMode(str, Enum):
@@ -29,11 +30,28 @@ class ToolCallMode(str, Enum):
 
 class FsReadOperation(BaseModel):
     mode: ToolCallMode
-    path: str = Field(..., description="Specific file or directory path to operate on, e.g., 'src' or 'app.py'. Relative to project root if not absolute.")
-    query: Optional[str] = Field(None, description="Search query as regex for DISCOVER (file name) or EXTRACT (content). Required for EXTRACT.")
-    file_pattern: str = Field("*", description="Glob filter for files, e.g., '*.py' or '*.go|*.rs'.")
-    max_depth: Optional[int] = Field(10, ge=1, description="Maximum recursion depth for DISCOVER mode. Value SHOULD BE >= 1")
-    max_files: Optional[int] = Field(50, ge=1, description="Maximum number of files to return in DISCOVER mode")
+    path: str = Field(
+        ...,
+        description="Specific file or directory path to operate on, e.g., 'src' or 'app.py'. Relative to project root if not absolute."
+    )
+    query: Optional[str] = Field(
+        None,
+        description="Search query as regex for DISCOVER (file name) or EXTRACT (content). Required for EXTRACT."
+    )
+    file_pattern: str = Field(
+        "*",
+        description="Glob filter for files, e.g., '*.py|*.ipynb' or '*.go|*.rs'."
+    )
+    max_depth: Optional[int] = Field(
+        10,
+        ge=1,
+        description="Maximum recursion depth for DISCOVER mode. Value must be >= 1"
+    )
+    max_files: Optional[int] = Field(
+        50,
+        ge=1,
+        description="Maximum number of files to return in DISCOVER mode"
+    )
 
     @field_validator("path")
     @classmethod
@@ -45,20 +63,23 @@ class FsReadOperation(BaseModel):
                 logger.info(f"Path empty; defaulting to project root: {value}")
             path_obj = Path(value).resolve()
             if not path_obj.exists():
-                raise ValueError(f"Path {value} does not exist")
+                raise ValueError(f"Path does not exist: {value}")
             if not str(path_obj).startswith(project_root):
-                raise ValueError(f"Path {value} is outside project root; explicit permission is required to access external paths.")
+                raise ValueError(f"Path is outside project root: {value}; explicit permission required")
             return str(path_obj)
-        except Exception as e:
+        except ValueError as e:
             logger.error(f"Path validation failed: {str(e)}")
             raise ValueError(f"Invalid path: {str(e)}")
+        except Exception as e:
+            logger.error(f"Unexpected error during path validation: {type(e).__name__} - {str(e)}")
+            raise ValueError(f"Unexpected path validation error: {type(e).__name__} - {str(e)}")
 
     @field_validator("query")
     @classmethod
     def validate_query(cls, value: Any, info: ValidationInfo) -> Any:
         mode = info.data.get("mode")
         if mode == ToolCallMode.EXTRACT and value is None:
-            raise ValueError("Query is required for extract mode to perform regex matching.")
+            raise ValueError("Query is required for EXTRACT mode to perform regex matching")
         if mode == ToolCallMode.DISCOVER and value is None:
             return ""
         if value:
@@ -85,8 +106,6 @@ class FsReadOperation(BaseModel):
 class FsReadParams(BaseModel):
     operations: List[FsReadOperation]
 
-from .base import BaseTool, ToolMetadata, ToolCategory
-
 class FsReadTool(BaseTool):
     def __init__(self, log_level: str = "INFO"):
         metadata = ToolMetadata(
@@ -107,45 +126,48 @@ class FsReadTool(BaseTool):
     def _load_gitignore(self) -> None:
         """Load .gitignore patterns to exclude files."""
         gitignore_path = Path(self.project_root) / ".gitignore"
-        if gitignore_path.exists():
-            try:
+        try:
+            if gitignore_path.exists():
                 with open(gitignore_path, 'r', encoding='utf-8', errors='ignore') as f:
                     for line in f:
                         line = line.strip()
                         if line and not line.startswith('#'):
                             self.exclusion_patterns.append(line)
-            except (OSError, UnicodeDecodeError) as e:
-                logger.debug(f"Failed to read {gitignore_path}: {e}")
+            else:
+                logger.debug(f".gitignore file does not exist at {gitignore_path}")
+        except OSError as e:
+            logger.debug(f"Failed to open .gitignore at {gitignore_path}: {type(e).__name__} - {str(e)}")
+        except UnicodeDecodeError as e:
+            logger.debug(f"Failed to decode .gitignore at {gitignore_path}: {type(e).__name__} - {str(e)}")
+        except Exception as e:
+            logger.debug(f"Unexpected error reading .gitignore at {gitignore_path}: {type(e).__name__} - {str(e)}")
 
     def _is_excluded(self, rel_path: str) -> bool:
         """Check if a path matches exclusion patterns."""
-        return any(fnmatch.fnmatch(rel_path, p) for p in self.exclusion_patterns)
-
-    def _get_exclusion_weight(self, rel_path: str) -> int:
-        """Assign a weight to prioritize non-excluded files."""
-        if rel_path.startswith('.'):
-            return 5
-        lower_path = rel_path.lower()
-        if any(term in lower_path for term in ['venv', 'env', 'node_modules', 'dist', 'build']):
-            return 1
-        if any(term in lower_path for term in ['__pycache__', '.cache', 'temp']):
-            return 2
-        return 3  # Default for other excluded
+        try:
+            return any(fnmatch.fnmatch(rel_path, p) for p in self.exclusion_patterns)
+        except Exception as e:
+            logger.error(f"Error checking exclusion for path {rel_path}: {type(e).__name__} - {str(e)}")
+            return True  # Conservatively exclude on error
 
     def _get_file_info(self, path: str) -> Dict[str, Any]:
         """Get metadata about a file, including size and binary status."""
         path_obj = Path(path)
-        if not path_obj.exists():
-            return {"error": "File not found"}
-
         try:
+            if not path_obj.exists():
+                return {"error": f"File does not exist: {path}"}
             stat = path_obj.stat()
         except OSError as e:
-            return {"error": f"Stat failed: {e}"}
+            return {"error": f"Failed to get file stats for {path}: {type(e).__name__} - {str(e)}"}
+        except Exception as e:
+            return {"error": f"Unexpected error getting stats for {path}: {type(e).__name__} - {str(e)}"}
 
-        rel_path = os.path.relpath(path, self.project_root)
-        if self._is_excluded(rel_path):
-            return {"error": "Excluded by patterns"}
+        try:
+            rel_path = os.path.relpath(path, self.project_root)
+            if self._is_excluded(rel_path):
+                return {"error": f"File is excluded by patterns: {path}"}
+        except ValueError as e:
+            return {"error": f"Failed to compute relative path for {path}: {type(e).__name__} - {str(e)}"}
 
         file_size = stat.st_size
         is_binary = False
@@ -153,19 +175,20 @@ class FsReadTool(BaseTool):
 
         try:
             with open(path, 'rb') as f:
-                chunk = f.read(2048)  # Larger sample for better binary detection
-                if b'\0' in chunk:
-                    is_binary = True
-                else:
-                    try:
-                        chunk.decode('utf-8')
-                        with open(path, 'r', encoding='utf-8', errors='ignore') as f_text:
-                            lines = sum(1 for _ in f_text)
-                    except UnicodeDecodeError:
-                        is_binary = True
-        except (OSError, UnicodeDecodeError) as e:
-            logger.debug(f"Error checking file {path}: {str(e)}")
+                chunk = f.read(2048)
+            if b'\0' in chunk:
+                is_binary = True
+            else:
+                chunk.decode('utf-8')
+                with open(path, 'r', encoding='utf-8', errors='ignore') as f_text:
+                    lines = sum(1 for _ in f_text)
+        except OSError as e:
+            return {"error": f"Failed to open file {path}: {type(e).__name__} - {str(e)}"}
+        except UnicodeDecodeError:
             is_binary = True
+            lines = 0
+        except Exception as e:
+            return {"error": f"Unexpected error reading file {path}: {type(e).__name__} - {str(e)}"}
 
         return {
             "size": file_size,
@@ -177,42 +200,94 @@ class FsReadTool(BaseTool):
 
     def _build_tree(self, rel_paths: List[str]) -> str:
         """Build a tree representation of file paths."""
-        tree = {}
-        for rel_path in rel_paths:
-            parts = rel_path.split(os.sep)
-            current = tree
-            for part in parts[:-1]:  # Dirs
-                if part not in current:
-                    current[part] = {}
-                current = current[part]
-            if parts:  # File
-                current[parts[-1]] = {}  # Empty dict for file
+        try:
+            tree = {}
+            for rel_path in rel_paths:
+                parts = rel_path.split(os.sep)
+                current = tree
+                for part in parts[:-1]:
+                    if part not in current:
+                        current[part] = {}
+                    current = current[part]
+                if parts:
+                    current[parts[-1]] = {}
 
-        def print_tree(node, prefix: str = "") -> List[str]:
-            lines = []
-            items = sorted(node.keys())
-            for i, item in enumerate(items):
-                is_last = i == len(items) - 1
-                connector = "└── " if is_last else "├── "
-                lines.append(prefix + connector + item)
-                sub_prefix = prefix + ("    " if is_last else "│   ")
-                lines.extend(print_tree(node[item], sub_prefix))
-            return lines
+            def print_tree(node, prefix: str = "") -> List[str]:
+                lines = []
+                items = sorted(node.keys())
+                for i, item in enumerate(items):
+                    is_last = i == len(items) - 1
+                    connector = "└── " if is_last else "├── "
+                    lines.append(prefix + connector + item)
+                    sub_prefix = prefix + ("    " if is_last else "│   ")
+                    lines.extend(print_tree(node[item], sub_prefix))
+                return lines
 
-        tree_lines = print_tree(tree)
-        return "\n".join(tree_lines) if tree_lines else "No files found"
+            tree_lines = print_tree(tree)
+            return "\n".join(tree_lines) if tree_lines else "No files found"
+        except Exception as e:
+            logger.error(f"Failed to build file tree: {type(e).__name__} - {str(e)}")
+            return "Error: Failed to build file tree structure"
 
-    def _discover_files(self, path: str, file_pattern: str, query: str, max_depth: int, max_files: int) -> str:
-        """Discover files matching patterns and query, returning a tree structure."""
+    def _discover_files(self, path: str, file_pattern: str, query: str, max_depth: int, max_files: int, is_suggestion: bool = False) -> str:
+        """Discover files matching patterns and query, returning a tree structure or suggestions."""
         start_time = time.time()
         path_obj = Path(path)
-        if not path_obj.is_dir():
-            return json.dumps({"error": "Path is not a directory for discovery"})
+        suggestions = []
 
-        query_pattern = re.compile(query, re.IGNORECASE) if query else None
-        patterns = [fnmatch.translate(p) for p in file_pattern.split('|')]
-        pattern_regexes = [re.compile(p) for p in patterns]
+        # Handle non-existent path by listing files in parent directory
+        try:
+            if not path_obj.exists():
+                parent_path = path_obj.parent if path_obj.parent.exists() else Path.cwd()
+                # Use broad file pattern for suggestions
+                suggestion_result = self._discover_files(
+                    str(parent_path), "*", "", max_depth=2, max_files=10, is_suggestion=True
+                )
+                try:
+                    suggestion_data = json.loads(suggestion_result)
+                    if suggestion_data.get("data"):
+                        suggestions = suggestion_data["data"][0].split("\n") if suggestion_data["data"] else []
+                    message = f"The path doesn't exist: {path}. The directory contains these files; check for potential candidates: {', '.join(suggestions[:10]) if suggestions else 'No files found'}"
+                    return json.dumps({
+                        "data": [],
+                        "message": message,
+                        "suggestions": suggestions[:10]
+                    })
+                except json.JSONDecodeError:
+                    return json.dumps({
+                        "data": [],
+                        "message": f"The path doesn't exist: {path}. Failed to generate suggestions."
+                    })
+            if not path_obj.is_dir():
+                return json.dumps({
+                    "data": [],
+                    "message": f"The path is not a directory: {path}. Please provide a valid directory path."
+                })
+        except Exception as e:
+            return json.dumps({
+                "data": [],
+                "message": f"Failed to check path: {type(e).__name__} - {str(e)}"
+            })
+
+        try:
+            query_pattern = re.compile(query, re.IGNORECASE) if query else None
+        except re.error as e:
+            return json.dumps({
+                "data": [],
+                "message": f"Invalid regex query '{query}': {str(e)}. Ensure the regex pattern is valid."
+            })
+
+        try:
+            patterns = [fnmatch.translate(p) for p in file_pattern.split('|')]
+            pattern_regexes = [re.compile(p) for p in patterns]
+        except Exception as e:
+            return json.dumps({
+                "data": [],
+                "message": f"Failed to compile file patterns: {type(e).__name__} - {str(e)}. Check the file_pattern syntax."
+            })
+
         candidates = []
+        errors = []
 
         def _collect_with_walk(dir_path: str, current_depth: int, file_count: List[int]) -> None:
             if current_depth > max_depth or file_count[0] >= max_files:
@@ -229,62 +304,203 @@ class FsReadTool(BaseTool):
                     if entry.is_file() and any(p.match(entry.name) for p in pattern_regexes):
                         if query_pattern and not query_pattern.search(entry.name):
                             continue
-                        weight = 10 if not self._is_excluded(rel_path) else self._get_exclusion_weight(rel_path)
-                        candidates.append((entry.path, weight))
+                        candidates.append(entry.path)
                         file_count[0] += 1
                     if entry.is_dir():
                         _collect_with_walk(entry.path, current_depth + 1, file_count)
             except (OSError, PermissionError) as e:
-                logger.debug(f"Scan error in {dir_path}: {e}")
+                errors.append(f"Failed to scan directory {dir_path}: {type(e).__name__} - {str(e)}")
+            except Exception as e:
+                errors.append(f"Unexpected error scanning directory {dir_path}: {type(e).__name__} - {str(e)}")
 
         file_count = [0]
         _collect_with_walk(str(path_obj), 0, file_count)
 
         if not candidates:
-            return json.dumps({"error": "No files matched the criteria"})
+            # Generate suggestions by listing files in the directory
+            suggestion_result = self._discover_files(
+                path, "*", "", max_depth=2, max_files=10, is_suggestion=True
+            )
+            try:
+                suggestion_data = json.loads(suggestion_result)
+                suggestions = suggestion_data["data"][0].split("\n") if suggestion_data["data"] else []
+                message = f"No files matched the criteria in directory {path}. The directory contains these files; check for potential candidates: {', '.join(suggestions[:10]) if suggestions else 'No files found'}"
+                if errors:
+                    message += f" Errors encountered: {'; '.join(errors)}"
+                return json.dumps({
+                    "data": [],
+                    "message": message,
+                    "suggestions": suggestions[:10]
+                })
+            except json.JSONDecodeError:
+                return json.dumps({
+                    "data": [],
+                    "message": f"No files matched the criteria in directory {path}. Failed to generate suggestions."
+                })
 
-        candidates.sort(key=lambda x: (-x[1], x[0]))
-        selected_paths = [p for p, w in candidates[:max_files]]
-        rel_paths = [os.path.relpath(p, path) for p in selected_paths]
-        tree_str = self._build_tree(rel_paths)
+        try:
+            candidates.sort()  # Sort alphabetically
+            selected_paths = candidates[:max_files]
+            rel_paths = [os.path.relpath(p, path) for p in selected_paths]
+            tree_str = self._build_tree(rel_paths)
+        except Exception as e:
+            return json.dumps({
+                "data": [],
+                "message": f"Failed to process discovered files: {type(e).__name__} - {str(e)}. Ensure file paths are valid."
+            })
 
         logger.info(f"Discovered {len(selected_paths)} files in {time.time() - start_time:.2f}s")
-        return json.dumps({"data": tree_str})
+        return json.dumps({
+            "data": [tree_str],
+            "message": "Operation completed successfully"
+        })
 
     def _extract_content(self, path: str, query: str, file_pattern: str) -> str:
         """Extract content from files matching query and pattern."""
         path_obj = Path(path)
-        if not path_obj.exists():
-            return json.dumps({"error": f"Path {path} does not exist"})
+        try:
+            if not path_obj.exists():
+                parent_path = path_obj.parent if path_obj.parent.exists() else Path.cwd()
+                suggestion_result = self._discover_files(
+                    str(parent_path), "*", "", max_depth=2, max_files=10, is_suggestion=True
+                )
+                try:
+                    suggestion_data = json.loads(suggestion_result)
+                    suggestions = suggestion_data["data"][0].split("\n") if suggestion_data["data"] else []
+                    message = f"The path doesn't exist: {path}. The directory contains these files; check for potential candidates: {', '.join(suggestions[:10]) if suggestions else 'No files found'}"
+                    return json.dumps({
+                        "data": [],
+                        "message": message,
+                        "suggestions": suggestions
+                    })
+                except json.JSONDecodeError:
+                    return json.dumps({
+                        "data": [],
+                        "message": f"The path doesn't exist: {path}. Failed to generate suggestions."
+                    })
+        except Exception as e:
+            return json.dumps({
+                "data": [],
+                "message": f"Failed to check path existence: {type(e).__name__} - {str(e)}"
+            })
 
         if path_obj.is_file():
-            rel_path = os.path.relpath(path, self.project_root)
-            if self._is_excluded(rel_path):
-                return json.dumps({"error": f"Path {path} is excluded by patterns"})
-            content = self._extract_from_file(path, query)
-            return json.dumps({"data": content}, ensure_ascii=False)
-        else:
-            snippets = []
-            for root, dirs, files in os.walk(path):
-                for file in files:
-                    if any(fnmatch.fnmatch(file, p) for p in file_pattern.split('|')):
-                        full_path = os.path.join(root, file)
-                        rel_path = os.path.relpath(full_path, self.project_root)
-                        if not self._is_excluded(rel_path):
-                            file_snip = self._extract_from_file(full_path, query)
-                            if file_snip and not file_snip.startswith("[Binary") and not file_snip.startswith("Error"):
-                                snippets.append({"file": rel_path, "snippet": file_snip[:1000]})  # Limit snippet size
-            if not snippets:
-                return json.dumps({"error": f"No valid text files matched the criteria in {path}"})
             try:
-                content = json.dumps({"data": snippets}, ensure_ascii=False)
-                if len(content) > 16 * 1024:
-                    # Truncate snippets instead of the JSON
-                    truncated_snippets = snippets[:10]  # Limit to first 10 files
-                    content = json.dumps({"data": truncated_snippets, "truncated": True}, ensure_ascii=False)
-                return content
+                rel_path = os.path.relpath(path, self.project_root)
+                if self._is_excluded(rel_path):
+                    return json.dumps({
+                        "data": [],
+                        "message": f"The path is excluded by patterns: {path}. The directory contains these files; check for potential candidates: []"
+                    })
+                content = self._extract_from_file(path, query)
+                if content == "No matches found":
+                    suggestion_result = self._discover_files(
+                        str(path_obj.parent), "*", "", max_depth=2, max_files=10, is_suggestion=True
+                    )
+                    try:
+                        suggestion_data = json.loads(suggestion_result)
+                        suggestions = suggestion_data["data"][0].split("\n") if suggestion_data["data"] else []
+                        message = f"No matches found for query '{query}' in {path}. The directory contains these files; check for potential candidates: {', '.join(suggestions[:10]) if suggestions else 'No files found'}"
+                        return json.dumps({
+                            "data": [],
+                            "message": message
+                        })
+                    except json.JSONDecodeError:
+                        return json.dumps({
+                            "data": [],
+                            "message": f"No matches found for query '{query}' in {path}. Failed to generate suggestions."
+                        })
+                return json.dumps({
+                    "data": [{"file": rel_path, "snippet": content}],
+                    "message": "Operation completed successfully"
+                })
+            except ValueError as e:
+                return json.dumps({
+                    "data": [],
+                    "message": f"Failed to compute relative path for {path}: {type(e).__name__} - {str(e)}"
+                })
             except Exception as e:
-                return json.dumps({"error": f"JSON serialization failed: {str(e)}"})
+                return json.dumps({
+                    "data": [],
+                    "message": f"Failed to process file {path}: {type(e).__name__} - {str(e)}"
+                })
+        else:
+            errors = []
+            file_errors = []
+            snippets = []
+
+            def onerror(e):
+                filename = getattr(e, 'filename', path)
+                errors.append(f"Failed to scan directory {filename}: {type(e).__name__} - {str(e)}")
+
+            try:
+                for root, dirs, files in os.walk(path, onerror=onerror):
+                    for file in files:
+                        if any(fnmatch.fnmatch(file, p) for p in file_pattern.split('|')):
+                            full_path = os.path.join(root, file)
+                            try:
+                                rel_path = os.path.relpath(full_path, self.project_root)
+                                if not self._is_excluded(rel_path):
+                                    file_snip = self._extract_from_file(full_path, query)
+                                    if file_snip.startswith("Error"):
+                                        file_errors.append(f"{file_snip} in file {rel_path}")
+                                    elif file_snip.startswith("[Binary"):
+                                        pass
+                                    else:
+                                        if file_snip and file_snip != "No matches found":
+                                            snippets.append({"file": rel_path, "snippet": file_snip[:1000]})
+                            except ValueError as e:
+                                file_errors.append(f"Failed to compute relative path for {full_path}: {type(e).__name__} - {str(e)}")
+                            except Exception as e:
+                                file_errors.append(f"Unexpected error processing file {full_path}: {type(e).__name__} - {str(e)}")
+            except Exception as e:
+                return json.dumps({
+                    "data": [],
+                    "message": f"Failed to traverse directory {path}: {type(e).__name__} - {str(e)}"
+                })
+
+            if not snippets:
+                suggestion_result = self._discover_files(
+                    path, "*", "", max_depth=2, max_files=10, is_suggestion=True
+                )
+                try:
+                    suggestion_data = json.loads(suggestion_result)
+                    suggestions = suggestion_data["data"][0].split("\n") if suggestion_data["data"] else []
+                    message = f"No matches found for query '{query}' in directory {path}. The directory contains these files; check for potential candidates: {', '.join(suggestions[:10]) if suggestions else 'No files found'}"
+                    if file_errors:
+                        message += f" File errors: {'; '.join(file_errors[:3])}"
+                    if errors:
+                        message += f" Directory scan errors: {'; '.join(errors)}"
+                    return json.dumps({
+                        "data": [],
+                        "message": message
+                    })
+                except json.JSONDecodeError:
+                    return json.dumps({
+                        "data": [],
+                        "message": f"No matches found for query '{query}' in directory {path}. Failed to generate suggestions."
+                    })
+
+            try:
+                content = [{"file": s["file"], "snippet": s["snippet"]} for s in snippets]
+                if len(json.dumps(content)) > 16 * 1024:
+                    content = content[:10]
+                    message = "Operation completed successfully, but output was truncated due to size limits."
+                else:
+                    message = "Operation completed successfully"
+                if file_errors:
+                    message += f" File errors: {'; '.join(file_errors[:3])}"
+                if errors:
+                    message += f" Directory scan errors: {'; '.join(errors)}"
+                return json.dumps({
+                    "data": content,
+                    "message": message
+                }, ensure_ascii=False)
+            except Exception as e:
+                return json.dumps({
+                    "data": [],
+                    "message": f"Failed to serialize extracted content to JSON: {type(e).__name__} - {str(e)}"
+                })
 
     def _extract_from_file(self, file_path: str, query: str) -> str:
         """Extract content from a single file with regex matching."""
@@ -293,22 +509,34 @@ class FsReadTool(BaseTool):
             return f"Error: {file_info['error']}"
         if file_info["is_binary"]:
             return f"[Binary file: {file_info['size']} bytes]"
+
         try:
             pattern = re.compile(query, re.IGNORECASE | re.MULTILINE) if query else None
+        except re.error as e:
+            return f"Error: Invalid regex pattern in query for file {file_path}: {type(e).__name__} - {str(e)}"
+
+        try:
             with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
                 lines = f.readlines()
+        except OSError as e:
+            return f"Error reading file {file_path}: {type(e).__name__} - {str(e)}"
+        except UnicodeDecodeError as e:
+            return f"Error decoding file {file_path}: {type(e).__name__} - {str(e)}"
+        except Exception as e:
+            return f"Error: Unexpected error reading file {file_path}: {type(e).__name__} - {str(e)}"
+
+        try:
             if not query:
                 content = "".join(lines)
-                if len(content) > 1024:  # Smaller limit
+                if len(content) > 1024:
                     content = content[:1024] + "... [truncated]"
                 return content + f"\n--- File Info: {file_info['lines']} lines, {file_info['size']} bytes ---"
             matches = []
             for line_num, line in enumerate(lines, 1):
                 if pattern and pattern.search(line):
-                    # Clean the line to avoid JSON issues
                     clean_line = line.strip().replace('"', '\\"').replace('\n', '\\n').replace('\r', '\\r')
                     matches.append(f"Line {line_num}: {clean_line}")
-                    if len(matches) >= 20:  # Limit matches per file
+                    if len(matches) >= 20:
                         break
             if not matches:
                 return "No matches found"
@@ -316,60 +544,63 @@ class FsReadTool(BaseTool):
             if len(content) > 16 * 1024:
                 content = content[:16 * 1024] + "... [truncated]"
             return content + f"\n--- File Info: {file_info['lines']} lines, {file_info['size']} bytes ---"
-        except (OSError, UnicodeDecodeError) as e:
-            logger.error(f"Error reading file {file_path}: {str(e)}")
-            return f"Error reading file: {str(e)}"
+        except Exception as e:
+            return f"Error processing file content {file_path}: {type(e).__name__} - {str(e)}"
 
     def get_parameters_schema(self, verbose: bool = True) -> Dict[str, Any]:
         """Return OpenAI-compatible schema for the tool."""
-        schema = {
-            "type": "function",
-            "function": {
-                "name": "fs_read",
-                "description": "Discover files in tree structure or extract regex-matched snippets. Uses exclusions with fallback sorting." if verbose else "",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "operations": {
-                            "type": "array",
-                            "items": {
-                                "type": "object",
-                                "properties": {
-                                    "mode": {
-                                        "type": "string",
-                                        "enum": [mode.value for mode in ToolCallMode],
-                                        "description": "Select 'discover' to list files in tree or 'extract' to pull snippets." if verbose else ""
+        try:
+            schema = {
+                "type": "function",
+                "function": {
+                    "name": "fs_read",
+                    "description": "Discover files in tree structure or extract regex-matched snippets. Uses exclusions with fallback sorting." if verbose else "",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "operations": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "mode": {
+                                            "type": "string",
+                                            "enum": [mode.value for mode in ToolCallMode],
+                                            "description": "Select 'discover' to list files in tree or 'extract' to pull snippets." if verbose else ""
+                                        },
+                                        "path": {
+                                            "type": "string",
+                                            "description": "File or directory path relative to project root, e.g., 'src' or 'app.py'." if verbose else ""
+                                        },
+                                        "query": {
+                                            "type": "string",
+                                            "description": "Regex for fuzzy file name (DISCOVER) or content (EXTRACT). Required for EXTRACT." if verbose else ""
+                                        },
+                                        "file_pattern": {
+                                            "type": "string",
+                                            "description": "Glob filter, e.g., '*.py|*.ipynb' or '*.go|*.rs'." if verbose else ""
+                                        },
+                                        "max_depth": {
+                                            "type": "integer",
+                                            "description": "Maximum recursion depth for DISCOVER mode (default: 10)." if verbose else ""
+                                        },
+                                        "max_files": {
+                                            "type": "integer",
+                                            "description": "Maximum number of files to return in DISCOVER mode (default: 50)." if verbose else ""
+                                        }
                                     },
-                                    "path": {
-                                        "type": "string",
-                                        "description": "File or directory path relative to project root, e.g., 'src' or 'app.py'." if verbose else ""
-                                    },
-                                    "query": {
-                                        "type": "string",
-                                        "description": "Regex for fuzzy file name (DISCOVER) or content (EXTRACT). Required for EXTRACT." if verbose else ""
-                                    },
-                                    "file_pattern": {
-                                        "type": "string",
-                                        "description": "Glob filter, e.g., '*.py' or '*.go|*.rs'." if verbose else ""
-                                    },
-                                    "max_depth": {
-                                        "type": "integer",
-                                        "description": "Maximum recursion depth for DISCOVER mode (default: 10)." if verbose else ""
-                                    },
-                                    "max_files": {
-                                        "type": "integer",
-                                        "description": "Maximum number of files to return in DISCOVER mode (default: 50)." if verbose else ""
-                                    }
-                                },
-                                "required": ["mode", "path"]
+                                    "required": ["mode", "path"]
+                                }
                             }
-                        }
-                    },
-                    "required": ["operations"]
+                        },
+                        "required": ["operations"]
+                    }
                 }
             }
-        }
-        return schema["function"]["parameters"]
+            return schema["function"]["parameters"]
+        except Exception as e:
+            logger.error(f"Failed to generate parameters schema: {type(e).__name__} - {str(e)}")
+            return {"error": f"Failed to generate parameters schema: {type(e).__name__} - {str(e)}"}
 
     def execute(self, **kwargs) -> Dict[str, Any]:
         """Execute filesystem read operations with robust error handling."""
@@ -380,26 +611,45 @@ class FsReadTool(BaseTool):
                 if 'operations' not in kwargs and ('mode' in kwargs or 'path' in kwargs):
                     kwargs = {'operations': [kwargs]}
                 params = FsReadParams(**kwargs)
-            result = self._execute_internal(params)
-            # Simplify response for single successful operation
-            if len(params.operations) == 1 and result["success"] and not result["error"]:
-                op_result = result["data"][0]
-                return {
-                    "success": True,
-                    "data": json.loads(op_result["data"])["data"] if op_result["data"] else None,
-                    "error": None,
-                    "metadata": {"processed_files": len(result["data"])}
-                }
-            return result
         except ValidationError as e:
-            logger.error(f"Input validation failed: {str(e)}")
-            return {"success": False, "data": [], "error": {"type": "ValidationError", "message": str(e)}, "metadata": {}}
-        except AttributeError as e:
-            logger.error(f"Attribute error in execution: {str(e)}")
-            return {"success": False, "data": [], "error": {"type": "AttributeError", "message": str(e)}, "metadata": {}}
+            error_msg = f"Invalid parameters: {extract_validation_error(e)}"
+            return create_error_response(error_msg)
         except Exception as e:
-            logger.critical(f"Unexpected execution error: {str(e)}")
-            return {"success": False, "data": [], "error": {"type": "UnexpectedError", "message": str(e)}, "metadata": {}}
+            return create_error_response(f"Parameter processing failed: {type(e).__name__} - {str(e)}")
+
+        try:
+            result = self._execute_internal(params)
+            if len(params.operations) == 1 and result["success"]:
+                op_result = result["data"][0]
+                try:
+                    json_data = json.loads(op_result["data"]) if op_result["data"] else {"data": [], "message": "Operation completed successfully"}
+                    data = json_data.get("data", [])
+                    message = json_data.get("message", "Operation completed successfully")
+                    suggestions = json_data.get("suggestions", [])
+                except json.JSONDecodeError as e:
+                    return create_error_response(f"Failed to parse operation result: {type(e).__name__} - {str(e)}")
+                return create_success_response(
+                    message=message,
+                    data=data,
+                    processed_files=len(result["data"]),
+                    suggestions=suggestions if suggestions else None
+                )
+            elif not result["success"]:
+                op_result = result["data"][0] if result["data"] else {}
+                error_data = op_result.get("error", {})
+                message = error_data.get("message", "Operation failed") if isinstance(error_data, dict) else str(error_data)
+                try:
+                    json_data = json.loads(op_result.get("data", "{}"))
+                    suggestions = json_data.get("suggestions", [])
+                except (json.JSONDecodeError, KeyError):
+                    suggestions = []
+                return create_error_response(
+                    message=message,
+                    suggestions=suggestions if suggestions else None
+                )
+            return result
+        except Exception as e:
+            return create_error_response(f"Execution failed: {type(e).__name__} - {str(e)}")
 
     def _execute_internal(self, params: FsReadParams) -> Dict[str, Any]:
         """Internal execution logic for batch operations."""
@@ -415,19 +665,28 @@ class FsReadTool(BaseTool):
             try:
                 if mode == "discover":
                     output_data = self._discover_files(path, op.file_pattern, op.query or "", op.max_depth, op.max_files)
-                    total_processed += op.max_files  # Approximate
+                    total_processed += op.max_files
                 elif mode == "extract":
                     output_data = self._extract_content(path, op.query, op.file_pattern)
                     total_processed += 1
             except ValueError as e:
-                if "outside project root" in str(e):
-                    error = {"type": "PermissionError", "message": str(e)}
-                else:
-                    error = {"type": "ValueError", "message": str(e)}
+                error = {
+                    "type": "PermissionError" if "outside project root" in str(e) else "ValueError",
+                    "message": str(e)
+                }
                 logger.error(f"Error in {mode} on {path}: {str(e)}")
-            except (OSError, UnicodeDecodeError, re.error) as e:
+            except (OSError, PermissionError) as e:
                 error = {"type": type(e).__name__, "message": str(e)}
-                logger.error(f"Error in {mode} on {path}: {str(e)}")
+                logger.error(f"OS error in {mode} on {path}: {str(e)}")
+            except UnicodeDecodeError as e:
+                error = {"type": "UnicodeDecodeError", "message": str(e)}
+                logger.error(f"Decode error in {mode} on {path}: {str(e)}")
+            except re.error as e:
+                error = {"type": "RegexError", "message": str(e)}
+                logger.error(f"Regex error in {mode} on {path}: {str(e)}")
+            except Exception as e:
+                error = {"type": type(e).__name__, "message": str(e)}
+                logger.error(f"Unexpected error in {mode} on {path}: {type(e).__name__} - {str(e)}")
 
             results.append({
                 "mode": mode,
@@ -437,11 +696,13 @@ class FsReadTool(BaseTool):
             })
 
         overall_success = all(r.get("error") is None for r in results)
-        overall_error = None if overall_success else {"type": "BatchError", "message": "Some operations failed—check individual errors."}
+        overall_error = None if overall_success else {
+            "type": "BatchError",
+            "message": "Some operations failed—check individual errors for details"
+        }
         return {
             "success": overall_success,
             "data": results,
             "error": overall_error,
             "metadata": {"processed_files": total_processed}
         }
-

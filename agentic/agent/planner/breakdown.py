@@ -58,17 +58,14 @@ TECHNICAL APPROACH:
 
 Use AI automation terminology: analyze, generate, implement, validate, deploy.
 Focus on tasks that can be executed programmatically by AI agent.
-Avoid human-centric activities like interviews, meetings, or manual processes.
+Avoid human-centric activities like interviews, meetings, estimates or manual processes.
 """
         
         try:
             agent_response = self.agent.run(prompt)
-            self.console.print(f"🔍 Agent response type: {type(agent_response)}")
-            self.console.print(f"🔍 Agent response keys: {agent_response.keys() if isinstance(agent_response, dict) else 'Not a dict'}")
             
             response = agent_response.get("content", "") if isinstance(agent_response, dict) else str(agent_response)
-            self.console.print(f"🔍 Response length: {len(response)}")
-            
+            # TODO : Add a title filed in the model.py and use that title as a file name based on the user task
             # Save breakdown for reference
             with open("project_breakdown.txt", 'w') as f:
                 f.write(response)
