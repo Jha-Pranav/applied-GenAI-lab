@@ -17,6 +17,12 @@ from .task_generator import TaskGenerator
 from .task_executor import TaskExecutor
 from .validation import TaskValidator
 from .cache import CacheManager
+import asyncio
+import concurrent.futures
+
+import re
+
+import os
 
 # %% ../../../nbs/buddy/backend/agents/planner/executor.ipynb 2
 class DynamicTaskExecutor:
@@ -58,6 +64,18 @@ class DynamicTaskExecutor:
         self.project_breakdown = None
         self.estimated_total_tasks: int = 0
         self.project_folder: Optional[str] = None
+        
+    def execute(self, user_request: str) -> ProjectContext:
+        """Synchronous wrapper for execute_project."""
+        try:
+            loop = asyncio.get_running_loop()
+            # We're in an event loop, create a new thread
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                future = pool.submit(asyncio.run, self.execute_project(user_request))
+                return future.result()
+        except RuntimeError:
+            # No event loop running, safe to use asyncio.run
+            return asyncio.run(self.execute_project(user_request))
     
     async def execute_project(self, user_request: str) -> ProjectContext:
         """Main execution loop with two-phase approach"""

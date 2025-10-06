@@ -6,6 +6,9 @@ __all__ = ['PlannerTool']
 # %% ../../nbs/buddy/backend/tools/planner/task_planner.ipynb 1
 from typing import Dict, Any
 from .base import BaseTool, ToolMetadata, ToolCategory
+import concurrent.futures
+
+
 
 class PlannerTool(BaseTool):
     """Tool wrapper for DynamicTaskExecutor"""
@@ -17,14 +20,13 @@ class PlannerTool(BaseTool):
             category=ToolCategory.INTELLIGENCE
         ))
     
-    async def execute(self, request: str) -> Dict[str, Any]:
+    def execute(self, request: str) -> Dict[str, Any]:
         """Execute planning and task execution using DynamicTaskExecutor"""
         try:
             import asyncio
-            from ..agent.planner.executor import DynamicTaskExecutor
-            from ..core.agent import Agent, AgentConfig
+            from agentic.agent.planner.executor import DynamicTaskExecutor
+            from agentic.core.agent import Agent, AgentConfig
             from rich.console import Console
-            
             # Create agent for executor
             agent_config = AgentConfig(
                 name="PlannerAgent",
@@ -35,8 +37,16 @@ class PlannerTool(BaseTool):
             
             # Execute planning
             executor = DynamicTaskExecutor(agent, console)
-            # result = asyncio.run(executor.execute_project(request))
-            result = await executor.execute_project(request)
+            # Check if we're already in an event loop
+            try:
+                loop = asyncio.get_running_loop()
+                # We're in an event loop, create a new thread
+                with concurrent.futures.ThreadPoolExecutor() as pool:
+                    future = pool.submit(asyncio.run, executor.execute_project(request))
+                    result = future.result()
+            except RuntimeError:
+                # No event loop running, safe to use asyncio.run
+                result = asyncio.run(executor.execute_project(request))
             
             return {"success": True, "result": result}
             
