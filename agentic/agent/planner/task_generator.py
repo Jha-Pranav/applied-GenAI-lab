@@ -19,6 +19,51 @@ class TaskGenerator:
         self.agent = agent
         self.console = console
     
+    def _determine_project_phase(self, completed: int, total: int) -> str:
+        """Determine current project phase based on completion"""
+        progress = completed / max(total, 1)
+        if progress < 0.3:
+            return "SETUP & FOUNDATION"
+        elif progress < 0.6:
+            return "CORE DEVELOPMENT"
+        elif progress < 0.8:
+            return "INTEGRATION & FEATURES"
+        else:
+            return "TESTING & FINALIZATION"
+    
+    def _get_phase_guidance(self, completed: int, total: int) -> str:
+        """Get phase-specific guidance for task generation"""
+        phase = self._determine_project_phase(completed, total)
+        
+        guidance = {
+            "SETUP & FOUNDATION": """
+• Focus: Project structure, requirements analysis, environment setup
+• Priority: Create solid foundation for development
+• Tasks: Directory structure, dependency management, configuration files
+• Quality: Establish coding standards and project conventions""",
+            
+            "CORE DEVELOPMENT": """
+• Focus: Main functionality implementation, core components
+• Priority: Build primary features and business logic
+• Tasks: Core modules, main algorithms, data structures
+• Quality: Robust error handling and comprehensive logging""",
+            
+            "INTEGRATION & FEATURES": """
+• Focus: Component integration, advanced features, optimization
+• Priority: Connect systems and add sophisticated functionality
+• Tasks: Module integration, advanced features, performance tuning
+• Quality: Code optimization and maintainability""",
+            
+            "TESTING & FINALIZATION": """
+• Focus: Quality assurance, documentation, final polish
+• Priority: Ensure reliability and completeness
+• Tasks: Testing (if required), documentation, final validation
+• Quality: Code review and production readiness"""
+        }
+        
+        return guidance.get(phase, "Continue with next logical development step")
+    
+    
     def generate_next_task(self, context: ProjectContext, breakdown: ProjectBreakdown, estimated_total: int) -> Optional[Task]:
         """Generate single next task using project breakdown context"""
         
@@ -29,65 +74,89 @@ class TaskGenerator:
         next_task_id = f"T{completed_count + 1:03d}"
         
         prompt = f"""
-CRITICAL: You MUST generate EXACTLY ONE task object (not an array). Generate the NEXT logical task in the project sequence.
+MISSION: Generate the next critical task in the software development pipeline.
 
-CURRENT PROGRESS: {completed_count} tasks completed out of estimated {estimated_total}
+EXECUTION CONTEXT:
+• Progress: {completed_count}/{estimated_total} tasks completed
+• Project Phase: {self._determine_project_phase(completed_count, estimated_total)}
+• Quality Standard: Production-grade implementation required
 
 {execution_context}
 
-PROJECT BREAKDOWN CONTEXT:
-Summary: {breakdown.project_summary}
-Phases: {', '.join(breakdown.phases)}
-Key Deliverables: {', '.join(breakdown.key_deliverables)}
-Technical Approach: {breakdown.technical_approach}
+PROJECT SPECIFICATION:
+• Objective: {breakdown.project_summary}
+• Development Phases: {' → '.join(breakdown.phases)}
+• Target Deliverables: {', '.join(breakdown.key_deliverables)}
+• Technical Stack: {breakdown.technical_approach}
 
-ORIGINAL REQUEST: {context.original_request}
+ORIGINAL REQUIREMENT: {context.original_request}
 
 {context_prompt}
 
-Based on the project breakdown and what has been completed, generate the NEXT SINGLE TASK. 
+TASK GENERATION STRATEGY:
+{self._get_phase_guidance(completed_count, estimated_total)}
 
-TASK PROGRESSION LOGIC:
-- If 0-2 tasks completed: Focus on project setup, requirements analysis, structure creation
-- If 3-5 tasks completed: Focus on core implementation, main components
-- If 6-8 tasks completed: Focus on integration, data handling, advanced features  
-- If 9+ tasks completed: Focus on testing, optimization, deployment
-
-Generate a task that logically follows the completed work and moves toward the key deliverables.
-
-RESPOND WITH SINGLE TASK OBJECT:
+RESPONSE FORMAT - SINGLE TASK OBJECT:
 {{
   "id": "{next_task_id}",
-  "name": "Next Task Name",
-  "description": "Task description aligned with project phases",
-  "dependencies": [],
+  "name": "[Descriptive Task Name - Action Oriented]",
+  "description": "[Detailed description aligned with current project phase and deliverables]",
+  "dependencies": [/* Previous task IDs if applicable */],
   "actions": [
     {{
       "step": 1,
-      "purpose": "Main action purpose",
-      "sub_steps": ["Specific step 1", "Specific step 2"],
+      "purpose": "[Clear, actionable purpose statement]",
+      "sub_steps": [
+        "[Specific action 1 - mention exact files/outputs]",
+        "[Specific action 2 - mention exact files/outputs]",
+        "[Specific action 3 - mention exact files/outputs]"
+      ],
       "introspect_after": true,
-      "system_prompt": "You are a developer. CONTEXT: {breakdown.project_summary}. Your task is to...",
-      "user_prompt": "Based on the project requirements, please...",
-      "introspect_prompt": "Validate that the task was completed by checking...",
+      "system_prompt": "You are a senior software engineer working on: {breakdown.project_summary}. Deliver high-quality code with proper error handling, documentation, and best practices.",
+      "user_prompt": "Implement the required functionality focusing on: [LIST ALL expected_outputs HERE]. Use appropriate tools (fs_write, execute_bash) to create well-structured, documented code.",
+      "introspect_prompt": "Validate implementation quality: check file existence, code structure, documentation completeness, and adherence to requirements.",
       "execution_mode": "sequential"
     }}
   ],
-  "success_criteria": "Specific success criteria",
-  "expected_outputs": ["output1.py"],
+  "success_criteria": "[Specific, measurable success criteria with file/component verification]",
+  "expected_outputs": ["[specific_file1.py]", "[specific_file2.json]", "[directory/]"],
   "potential_options": [],
   "needs_debate": false
 }}
 
-IMPORTANT: Always generate a valid task object. Only return null if truly no more work is needed (which should be rare for complex projects).
+DEBATE USAGE GUIDELINES:
+• Set "needs_debate": true for tasks involving:
+  - Architecture decisions (database choice, framework selection)
+  - Technology stack decisions (library comparisons, tool selection)
+  - Design pattern choices (authentication methods, API design)
+  - Performance optimization approaches
+• Set "potential_options": ["option1", "option2", "option3"] when debate is needed
+• Use debate sparingly - only for significant decisions, not implementation details
+
+QUALITY REQUIREMENTS:
+✓ All expected_outputs must be explicitly mentioned in sub_steps and user_prompt
+✓ Task must advance toward project objectives
+✓ Actions must be specific and executable
+✓ Success criteria must be measurable
+✓ High-quality standards apply
+
+Generate the next logical task or return null if project is complete.
 """
         
         try:
             response = self.agent.run(prompt).get("content", "")
             
-            # Save raw response for debugging
-            with open("task_generation_raw.txt", 'w') as f:
-                f.write(response)
+            # Save raw response for debugging in JSONL format
+            import json
+            from datetime import datetime
+            log_entry = {
+                "timestamp": datetime.now().isoformat(),
+                "task_id": next_task_id,
+                "title": breakdown.title if hasattr(breakdown, 'title') else "Unknown Project",
+                "response": response
+            }
+            with open("task_generation_raw.jsonl", 'a') as f:
+                f.write(json.dumps(log_entry) + '\n')
             
             # Parse and validate task
             response = response.strip()
@@ -339,15 +408,16 @@ RESPOND WITH TASK OBJECT:
             task_data.setdefault("actions", [{
                 "step": 1,
                 "purpose": task_data["name"],
-                "sub_steps": [],
+                "sub_steps": [f"Create {output}" for output in task_data.get("expected_outputs", [])],
                 "introspect_after": True,
-                "system_prompt": f"You are an AI assistant. Complete the task: {task_data['name']}",
-                "user_prompt": task_data["description"],
-                "introspect_prompt": f"Validate that {task_data['name']} was completed successfully",
+                "system_prompt": f"You are an AI assistant. Complete the task: {task_data['name']}. Create all expected outputs.",
+                "user_prompt": f"{task_data['description']}. Create all expected outputs using fs_write tool: {', '.join(task_data.get('expected_outputs', []))}",
+                "introspect_prompt": f"Validate that {task_data['name']} was completed successfully and all expected outputs exist",
                 "execution_mode": "sequential"
             }])
             
             return task_data
         
         return None
+
 

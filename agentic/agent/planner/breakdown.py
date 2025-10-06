@@ -26,6 +26,9 @@ REQUEST: {user_request}
 
 Provide response in this EXACT format:
 
+PROJECT TITLE:
+[Short, meaningful project name (2-4 words max, like "ScrapeMaster", "DataHarvester", "WebCrawler Pro")]
+
 PROJECT SUMMARY:
 [One paragraph overview of what needs to be built]
 
@@ -58,20 +61,30 @@ TECHNICAL APPROACH:
 
 Use AI automation terminology: analyze, generate, implement, validate, deploy.
 Focus on tasks that can be executed programmatically by AI agent.
-Avoid human-centric activities like interviews, meetings, estimates or manual processes.
+Avoid human-centric activities like interviews, meetings, or manual processes.
 """
         
         try:
             agent_response = self.agent.run(prompt)
+            self.console.print(f"🔍 Agent response type: {type(agent_response)}")
+            self.console.print(f"🔍 Agent response keys: {agent_response.keys() if isinstance(agent_response, dict) else 'Not a dict'}")
             
             response = agent_response.get("content", "") if isinstance(agent_response, dict) else str(agent_response)
-            # TODO : Add a title filed in the model.py and use that title as a file name based on the user task
+            self.console.print(f"🔍 Response length: {len(response)}")
+            
             # Save breakdown for reference
-            with open("project_breakdown.txt", 'w') as f:
-                f.write(response)
+            # with open("project_breakdown.txt", 'w') as f:
+            #     f.write(response)
             
             # Parse the response into structured format
             breakdown = self._parse_breakdown_response(response)
+            
+            # Save breakdown with title-based filename
+            if breakdown and breakdown.title:
+                filename = f"{breakdown.title.lower().replace(' ', '_')}_breakdown.txt"
+                with open(filename, 'w') as f:
+                    f.write(response)
+            
             return breakdown
             
         except Exception as e:
@@ -83,6 +96,7 @@ Avoid human-centric activities like interviews, meetings, estimates or manual pr
         
         lines = response.split('\n')
         
+        title = "Untitled Project"
         project_summary = "Project breakdown generated"
         phases = []
         deliverables = []
@@ -96,7 +110,9 @@ Avoid human-centric activities like interviews, meetings, estimates or manual pr
                 continue
                 
             # Detect sections
-            if "PROJECT SUMMARY" in line.upper() or "SUMMARY" in line.upper():
+            if "PROJECT TITLE" in line.upper() or line.upper().startswith("TITLE"):
+                current_section = "title"
+            elif "PROJECT SUMMARY" in line.upper() or "SUMMARY" in line.upper():
                 current_section = "summary"
             elif "PHASES" in line.upper() or "PHASE" in line.upper():
                 current_section = "phases"
@@ -111,12 +127,15 @@ Avoid human-centric activities like interviews, meetings, estimates or manual pr
                     phases.append(item)
                 elif current_section == "deliverables":
                     deliverables.append(item)
+            elif current_section == "title" and len(line) > 3:
+                title = line
             elif current_section == "summary" and len(line) > 20:
                 project_summary = line
             elif current_section == "technical" and len(line) > 20:
                 technical_approach = line
         
         return ProjectBreakdown(
+            title=title,
             project_summary=project_summary,
             phases=phases if phases else ["Setup", "Development", "Testing", "Deployment"],
             key_deliverables=deliverables if deliverables else ["Core components", "Documentation", "Tests"],
@@ -131,4 +150,5 @@ Avoid human-centric activities like interviews, meetings, estimates or manual pr
             if line.strip().startswith('-') or line.strip().startswith('•') or line.strip().startswith('*'):
                 task_count += 1
         return max(task_count, 5)
+
 

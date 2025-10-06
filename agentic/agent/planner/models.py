@@ -82,10 +82,13 @@ class ProjectContext(BaseModel):
     current_artifacts: List[str] = Field(default_factory=list, description="All project artifacts")
     total_tasks_completed: int = Field(0, description="Number of completed tasks")
     project_status: ExecutionStatus = Field(ExecutionStatus.PENDING, description="Overall project status")
+    failed_tasks: List[str] = Field(default_factory=list, description="List of failed task IDs")
 
 class ProjectBreakdown(BaseModel):
+    title: str = Field(..., description="Project title based on user request")
     project_summary: str = Field(..., description="High-level project summary")
     phases: List[str] = Field(..., description="Major project phases")
     key_deliverables: List[str] = Field(..., description="Key deliverables expected")
     technical_approach: str = Field(..., description="Technical approach and architecture")
+
 

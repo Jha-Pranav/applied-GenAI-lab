@@ -18,6 +18,7 @@ from agentic.agent.planner.models import (
     Task, ActionStep, ActionResult, IntrospectionResult, 
     TaskExecutionResult, ExecutionStatus
 )
+from ..introspector import IntrospectAgent
 
 # %% ../../../nbs/buddy/backend/agents/planner/task_executor.ipynb 2
 class TaskExecutor:
@@ -27,13 +28,7 @@ class TaskExecutor:
         self.agent = agent
         self.console = console
         self.max_retries = max_retries
-        self.introspect = IntrospectTool(
-            metadata=ToolMetadata(
-                name="introspect",
-                description="Task validation and feedback tool",
-                category=ToolCategory.INTELLIGENCE
-            )
-        )
+        self.introspect_agent = IntrospectAgent(agent, console)
     
     async def execute_task(self, task: Task) -> TaskExecutionResult:
         """Execute all actions in a task with full tracking"""
@@ -71,10 +66,16 @@ class TaskExecutor:
                 task_result.artifacts_created = []
                 
             artifacts = action_result.artifacts_created
-            if isinstance(artifacts, list):
-                task_result.artifacts_created.extend(artifacts)
-            elif artifacts:
-                task_result.artifacts_created.extend([str(artifacts)])
+            # Ensure artifacts is always a list
+            if not isinstance(artifacts, list):
+                if isinstance(artifacts, str):
+                    artifacts = [artifacts]
+                elif artifacts is None or isinstance(artifacts, bool):
+                    artifacts = []
+                else:
+                    artifacts = [str(artifacts)]
+            
+            task_result.artifacts_created.extend(artifacts)
             
             if action_result.status != ExecutionStatus.SUCCESS:
                 self.console.print(f"  ❌ Step {action.step} failed after {self.max_retries} retries")
@@ -114,7 +115,7 @@ class TaskExecutor:
                 
                 self.console.print(f"    🚀 Executing action: {action.purpose}")
                 
-                result = self._execute_single_action(action, retry_feedback, attempt + 1)
+                result = self._execute_single_action(action, retry_feedback, attempt + 1, retry_feedback)
                 
                 end_time = datetime.now()
                 execution_time = (end_time - start_time).total_seconds()
@@ -174,72 +175,105 @@ class TaskExecutor:
         action_result.status = ExecutionStatus.FAILED
         return action_result, introspection_result
     
-    def _execute_single_action(self, action: ActionStep, retry_feedback: str = "", attempt: int = 1) -> str:
+    def _execute_single_action(self, action: ActionStep, retry_feedback: str = "", attempt: int = 1, validation_error: str = "") -> str:
         """Execute single action using Agent's tool system"""
         
         retry_guidance = ""
         if attempt > 1:
             if attempt == 2:
-                retry_guidance = "RETRY GUIDANCE: Previous attempt failed. Try the same approach with corrections."
+                retry_guidance = f"""
+RETRY GUIDANCE (Attempt {attempt}/3):
+Previous attempt failed. Analyze the error and apply targeted corrections while maintaining the same general approach.
+
+FAILURE ANALYSIS:
+{validation_error if validation_error else retry_feedback}
+
+CORRECTIVE ACTIONS REQUIRED:
+- Address the specific error mentioned above
+- Maintain the same tool usage pattern but fix parameter issues
+- Ensure all expected outputs are properly created
+"""
             elif attempt >= 3:
-                retry_guidance = "RETRY GUIDANCE: Multiple failures detected. SWITCH TO ALTERNATIVE APPROACH. Don't repeat the same failing method."
+                retry_guidance = f"""
+RETRY GUIDANCE (Attempt {attempt}/3 - FINAL ATTEMPT):
+Multiple failures detected. CRITICAL: Switch to alternative approach immediately.
+
+PREVIOUS FAILURES:
+{validation_error if validation_error else retry_feedback}
+
+ALTERNATIVE STRATEGY REQUIRED:
+- DO NOT repeat the same failing method
+- Use different tools or approaches if available
+- Simplify the implementation if complexity is causing issues
+- Focus on core functionality first, then add features
+"""
         
         enriched_prompt = f"""
 SYSTEM CONTEXT:
 {action.system_prompt}
 
-USER REQUEST:
+MISSION OBJECTIVE:
 {action.user_prompt}
 
-EXECUTION DETAILS:
-- Purpose: {action.purpose}
-- Sub-steps: {', '.join(action.sub_steps)}
-- Execution Mode: {action.execution_mode}
+EXECUTION SPECIFICATION:
+• Primary Goal: {action.purpose}
+• Required Steps: {' → '.join(action.sub_steps)}
+• Execution Mode: {action.execution_mode}
+• Quality Standard: Production-grade implementation
 
 {retry_guidance}
 
-{f"RETRY FEEDBACK: {retry_feedback}" if retry_feedback else ""}
+{f"PREVIOUS ATTEMPT FEEDBACK: {retry_feedback}" if retry_feedback else ""}
 
-Execute this action and provide detailed output. If a tool is specified, use it to perform the actual operation.
+EXECUTION REQUIREMENTS:
+1. Use appropriate tools (fs_write, execute_bash, etc.) for file operations
+2. Create all expected outputs with proper content and structure
+3. Follow best practices for code quality and documentation
+4. Ensure error handling and validation where applicable
+5. Provide clear, actionable output for verification
+
+TOOL USAGE EXAMPLES:
+- fs_write: Use with command="create", path="file.py", file_text="content"
+- execute_bash: Use with command="mkdir -p directory" or similar
+
+Execute this action systematically and report detailed results.
 """
         
-        result = self.agent.run(enriched_prompt, stream=True, max_iterations=5)
+        result = self.agent.run(enriched_prompt, stream=False, max_iterations=5)
         return result.get("content", "")
     
     def _introspect_action(self, task: Task, action: ActionStep, result: str) -> IntrospectionResult:
-        """Use introspect tool to validate action success"""
+        """Use IntrospectAgent to validate action success"""
         
         self.console.print(f"    🔍 Starting introspection for step {action.step}")
         
         try:
-            introspect_params = {
-                "action": "task_review",
-                "task_review": {
-                    "task_id": task.id,
-                    "task_description": f"{task.description} - Step {action.step}: {action.purpose}",
-                    "solution_provided": result,
-                    "success_criteria": task.success_criteria,
-                    "actual_result": result,
-                    "execution_time": 1.0,
-                    "retry_count": 0
-                }
+            task_context = {
+                "task_id": task.id,
+                "description": task.description,
+                "purpose": action.purpose
             }
             
-            self.console.print(f"    📋 Introspect params: {introspect_params}")
+            # Run introspection synchronously
+            introspect_result = self.introspect_agent.evaluate_execution(
+                task_context=task_context,
+                execution_result=result,
+                success_criteria=task.success_criteria,
+                expected_outputs=task.expected_outputs
+            )
             
-            introspect_result = self.introspect.execute(**introspect_params)
+            self.console.print(f"    📊 Introspection result: {introspect_result}")
             
-            self.console.print(f"    📊 Raw introspect result: {introspect_result}")
-            
-            if introspect_result and 'performance_score' in introspect_result:
-                score = introspect_result['performance_score']
+            if introspect_result and 'overall_score' in introspect_result:
+                score = introspect_result['overall_score']
                 success = introspect_result.get('success', False)
                 feedback = introspect_result.get('feedback_for_retry', 'No feedback provided')
                 next_action = introspect_result.get('next_action', 'proceed' if success else 'retry')
                 recommendations = introspect_result.get('recommendations', [])
+                reasoning = introspect_result.get('reasoning', '')
                 
-                self.console.print(f"    ✅ Parsed introspection - Score: {score}, Success: {success}")
-                self.console.print(f"    💬 Feedback: {feedback}")
+                self.console.print(f"    ✅ Evaluation - Score: {score}, Success: {success}")
+                self.console.print(f"    💭 Reasoning: {reasoning}")
                 
                 return IntrospectionResult(
                     success=success,
@@ -249,7 +283,7 @@ Execute this action and provide detailed output. If a tool is specified, use it 
                     recommendations=recommendations
                 )
             else:
-                self.console.print(f"    ❌ Invalid introspect result format: {introspect_result}")
+                self.console.print(f"    ❌ Invalid introspection result format")
                 
         except Exception as e:
             self.console.print(f"    ⚠️ Introspection error: {e}")
@@ -283,4 +317,5 @@ Execute this action and provide detailed output. If a tool is specified, use it 
                 current_files.add(str(file_path))
         
         return list(current_files)
+
 

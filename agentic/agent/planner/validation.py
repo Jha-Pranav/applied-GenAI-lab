@@ -20,44 +20,12 @@ class TaskValidator:
     
     def __init__(self, console: Console):
         self.console = console
-        self.introspect = IntrospectTool(
-            metadata=ToolMetadata(
-                name="introspect",
-                description="Task validation and feedback tool",
-                category=ToolCategory.INTELLIGENCE
-            )
-        )
     
     def validate_task_consistency(self, task: Task) -> IntrospectionResult:
         """Validate internal consistency of task fields"""
         issues = []
         
-        user_prompts = " ".join([action.user_prompt for action in task.actions])
-        system_prompts = " ".join([action.system_prompt for action in task.actions])
-        success_criteria = task.success_criteria
-        expected_outputs = task.expected_outputs
-        
-        if not isinstance(expected_outputs, list):
-            expected_outputs = []
-        
-        files_in_criteria = re.findall(r'\b\w+\.\w+\b', success_criteria)
-        
-        for file in files_in_criteria:
-            covered = any(
-                file in expected_outputs or
-                any(output.endswith('/') and file in success_criteria for output in expected_outputs)
-            )
-            if not covered:
-                issues.append(f"Success criteria mentions '{file}' but it's not covered in expected_outputs")
-        
-        for output in expected_outputs:
-            if output.endswith('/'):
-                if output.rstrip('/') not in user_prompts and output.rstrip('/') not in system_prompts:
-                    issues.append(f"Expected directory '{output}' not mentioned in action prompts")
-            else:
-                if output not in user_prompts and output not in system_prompts:
-                    issues.append(f"Expected output '{output}' not mentioned in action prompts")
-        
+        # Only check if task description matches action purposes
         if not any(keyword in task.description.lower() for keyword in ['create', 'generate', 'build', 'implement', 'setup']):
             if any('write' in action.purpose.lower() or 'create' in action.purpose.lower() for action in task.actions):
                 issues.append("Task uses creation actions but description doesn't indicate creation/setup")
@@ -80,41 +48,32 @@ class TaskValidator:
         if not consistency_result.success:
             return consistency_result
         
-        try:
-            introspect_result = self.introspect.execute(
-                action="validate",
-                validation_context={
-                    "proposed_task": task.name,
-                    "task_description": task.description,
-                    "project_breakdown": breakdown.project_summary,
-                    "execution_history": [t.task_name for t in context.execution_history],
-                    "current_artifacts": context.current_artifacts,
-                    "validation_type": "task_planning"
-                }
+        # Simple validation without LLM introspection
+        if len(task.description) < 10:
+            return IntrospectionResult(
+                success=False,
+                score=3.0,
+                feedback="Task description too short - needs more detail",
+                next_action="regenerate",
+                recommendations=["Add more detailed task description"]
             )
-            
-            if introspect_result and 'performance_score' in introspect_result:
-                score = introspect_result['performance_score']
-                success = score >= 7
-                feedback = introspect_result.get('feedback_for_retry', 'Task planning looks good')
-                next_action = "regenerate" if not success else "proceed"
-                
-                return IntrospectionResult(
-                    success=success,
-                    score=score,
-                    feedback=feedback,
-                    next_action=next_action,
-                    recommendations=introspect_result.get('recommendations', [])
-                )
-                
-        except Exception as e:
-            self.console.print(f"⚠️ Pre-execution introspection error: {e}")
         
+        if not task.expected_outputs:
+            return IntrospectionResult(
+                success=False,
+                score=4.0,
+                feedback="No expected outputs defined",
+                next_action="regenerate", 
+                recommendations=["Define expected outputs for the task"]
+            )
+        
+        # Task passes basic validation
         return IntrospectionResult(
             success=True,
-            score=7.0,
-            feedback="Pre-execution validation unavailable",
+            score=8.0,
+            feedback="Task validation passed",
             next_action="proceed",
             recommendations=[]
         )
+
 

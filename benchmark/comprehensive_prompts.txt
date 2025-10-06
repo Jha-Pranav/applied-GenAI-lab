@@ -1,0 +1,1000 @@
+Show all log files
+Display system logs
+Show all test files
+Test network latency
+Show the main py file
+Show the tox ini file
+Show git clean status
+Show zombie processes
+Show all backup files
+Find empty directories
+Display git stash list
+Test network bandwidth
+Display firewall rules
+Test port connectivity
+Show open network ports
+Test network throughput
+List all symbolic links
+Find the factorial of 20
+Show the pytest ini file
+Display disk space usage
+Show git tag information
+Show git merge conflicts
+Show git worktree status
+Show process memory maps
+Identify I/O bottlenecks
+List all temporary files
+Read the config yaml file
+Parse CSV data from a URL
+Display running processes
+Show hardware information
+Display file access times
+Show all executable files
+Read the CHANGELOG md file
+Optimize import statements
+Find broken symbolic links
+Display git log with graph
+Display git reflog history
+Show network configuration
+Analyze unit test coverage
+Create a basic LICENSE file
+Simplify exception handling
+Extract data from RSS feeds
+Show firewall configuration
+Display network connections
+Show system security status
+Show inode usage statistics
+Run pycodestyle style check
+Analyze file encoding types
+Find files with code smells
+Show the pyproject toml file
+Create a basic setup py file
+Display file type statistics
+Show recently accessed files
+Show file backup information
+Show git hooks configuration
+Display git archive contents
+Show network security status
+Test network quality metrics
+Show memory usage by process
+Display CPU usage by process
+Show process resource limits
+Display process system calls
+Check for API design quality
+Perform codeclimate analysis
+Perform pyflakes error check
+Analyze test maintainability
+List all configuration files
+Show all documentation files
+Plot a sine wave from 0 to 2π
+Add new fields to data models
+Get sports scores from an API
+Show user account information
+Display network routing table
+Display VPN connection status
+Show process file descriptors
+Show process security context
+Scan for CSRF vulnerabilities
+Scan for business logic flaws
+Analyze caching opportunities
+Run radon complexity analysis
+Show files with no docstrings
+Show files with magic numbers
+Set up Kubernetes cluster API
+Create a Docker volume plugin
+Set up Kubernetes descheduler
+Show the contents of README md
+Create a simple README md file
+Display system services status
+Show file system health status
+Display git branch information
+Display git bisect information
+Display process tree hierarchy
+Display process I/O statistics
+Identify slow database queries
+Analyze response time patterns
+Check for deployment readiness
+Analyze code review compliance
+Analyze overall project health
+Run sonarqube quality analysis
+Run lizard complexity analysis
+Analyze test environment setup
+Analyze test reporting quality
+Count the number of test files
+Show all files larger than 1MB
+Create a Docker network plugin
+Show the contents of  gitignore
+Restructure module organization
+Show CPU usage and load average
+Show system performance metrics
+Display file compression ratios
+Show git cherry-pick candidates
+Show network traffic statistics
+Display process signal handlers
+Display process monitoring data
+Check for security logging gaps
+Analyze code readability scores
+Run black code formatting check
+Perform safety dependency check
+Perform mccabe complexity check
+Run xenon complexity monitoring
+Analyze file dependencies graph
+Set up Kubernetes event logging
+Display the contents of Makefile
+Find all prime numbers up to 100
+Display file system mount points
+Test DNS resolution for a domain
+Show network protocol statistics
+Show process network connections
+Check for insecure communication
+Perform semgrep pattern analysis
+Check test documentation quality
+Analyze test automation coverage
+Analyze test scalability factors
+Show files with the most imports
+Show files with the most classes
+Show files with circular imports
+Find files with unused functions
+List all directories recursively
+List all files with no extension
+Create a simple  env example file
+Create a simple CHANGELOG md file
+Create a basic  editorconfig file
+Consolidate duplicate code blocks
+Parse XML data from a web service
+Show system environment variables
+Show hidden files and directories
+Display directory tree with sizes
+Display git submodule information
+Show network interface statistics
+Show all running Python processes
+Show process library dependencies
+Check for vulnerable dependencies
+Analyze access control mechanisms
+Analyze garbage collection impact
+Check for scalability limitations
+Analyze version control practices
+Find all files containing 'class'
+Search for files with SQL queries
+Show files with the most comments
+Find files with hardcoded strings
+Show the directory tree structure
+Design a Docker-based IoT gateway
+Display the contents of Dockerfile
+Show the requirements-dev txt file
+Add validation to input parameters
+Create API documentation from code
+Show network interface information
+Display system configuration files
+Show files with specific ownership
+Display git configuration settings
+Display active network connections
+Display network device information
+Display process thread information
+Check for insecure deserialization
+Scan for security misconfiguration
+Check for CPU-intensive operations
+Perform isort import sorting check
+Run pydocstyle documentation check
+Perform vulture dead code analysis
+Analyze test execution performance
+Check test data privacy compliance
+Check test security considerations
+Analyze test deployment strategies
+Check test monitoring and alerting
+Show files with mixed line endings
+Analyze file modification patterns
+Find files with missing type hints
+Set up Kubernetes webhook mutation
+Configure Kubernetes audit logging
+Set up Kubernetes topology manager
+Configure Kubernetes sysctl tuning
+Read the first 10 lines of setup py
+Add new routes to API configuration
+Rename variables for better clarity
+Generate client SDK code for an API
+Scrape job listings from job boards
+Show system temperature and sensors
+Display package manager information
+Show directory sizes sorted by size
+Find duplicate files in the project
+Display git maintenance information
+Analyze input validation weaknesses
+Analyze session management security
+Identify resource contention issues
+Check for technical debt indicators
+Analyze code organization structure
+Check integration test completeness
+Analyze test performance benchmarks
+Check test accessibility compliance
+Find all files containing 'API_KEY'
+Find all files containing 'logging'
+Find files with deep nesting levels
+Show files with poor error handling
+Show files with inconsistent naming
+Analyze overall project file health
+Show all files with  json extension
+Show all empty files in the project
+List all image files in the project
+Implement Docker containerd runtime
+Set up Kubernetes volcano scheduler
+Display the contents of LICENSE file
+Display the contents of  env example
+Extract data from JSON API responses
+Display wireless network information
+Display process performance counters
+Identify blocking operations in code
+Identify synchronization bottlenecks
+Analyze load balancing effectiveness
+Check test data management practices
+Find all files containing 'def main'
+Search for files with regex patterns
+Show duplicate file names in project
+Count the number of global variables
+Show files with long parameter lists
+Show all Python files in the project
+List all files in the src/ directory
+Set up Kubernetes cluster autoscaler
+Set up Kubernetes cluster federation
+Read the  pre-commit-config yaml file
+Add type hints to function parameters
+Insert logging statements in a module
+Add a new method to an existing class
+Add comments to complex code sections
+Move functions to appropriate modules
+Standardize coding style across files
+Scrape forum discussions and comments
+Display kernel version and OS details
+Display cron jobs and scheduled tasks
+Show git diff for uncommitted changes
+Display git blame for a specific file
+Show git statistics and contributions
+Display process environment variables
+Display process debugging information
+Check for unnecessary object creation
+Check for inefficient data structures
+Identify performance regression risks
+Check for error handling completeness
+Run mypy type checking on Python code
+Run prospector comprehensive analysis
+Check test isolation and independence
+Check test failure analysis processes
+Generate comprehensive testing report
+Search for files with 'TODO' comments
+Search for files with hardcoded paths
+Find all files containing 'async def'
+List all hidden files and directories
+Configure Docker for ARM architecture
+Implement Docker image manifest lists
+Read the  github/workflows/ci yml file
+Insert middleware in a web application
+Display memory usage and available RAM
+Display file permissions for all files
+Show git remote repository information
+Display process scheduling information
+Check for naming convention compliance
+Search for files with 'FIXME' comments
+Find all files containing 'subprocess'
+Find all files containing 'os environ'
+Search for files with print statements
+Show files with long lines (>80 chars)
+Show files with many return statements
+Show files with potential memory leaks
+Find files with inefficient algorithms
+Set up Kubernetes certificate rotation
+Design Kubernetes windows node support
+Configure Docker for CRI compatibility
+Read the package json file if it exists
+Find the integral of sin(x) from 0 to π
+Simplify complex conditional statements
+Extract configuration to separate files
+Test network connectivity to google com
+Check for information disclosure issues
+Analyze dependency management practices
+Run pylint analysis on all Python files
+Show the git history of a specific file
+Show files with performance bottlenecks
+List all files in the current directory
+Design Kubernetes pod security policies
+Implement Kubernetes canary deployments
+Configure Docker for Windows containers
+Set up Kubernetes admission controllers
+Configure Kubernetes huge pages support
+Convert synchronous code to asynchronous
+Generate load testing scripts for an API
+Show network troubleshooting information
+Check for path traversal vulnerabilities
+Analyze code for performance bottlenecks
+Analyze network communication efficiency
+Search for files with exception handling
+Count the number of blank lines per file
+Set up Kubernetes webhook authentication
+Design Kubernetes device plugin for GPUs
+Calculate the Fibonacci sequence up to 50
+Generate a decorator for timing functions
+Update database schema in migration files
+Extract common code into a utility module
+Generate documentation from code comments
+Generate test data files for unit testing
+Show git status and recent commit history
+Check for XSS vulnerabilities in web code
+Check for resource utilization efficiency
+Check for code duplication across modules
+Analyze maintainability index of codebase
+Check for logging and monitoring coverage
+Analyze test continuous integration setup
+Find all files containing 'import pandas'
+Show files with potential security issues
+Implement Docker image pruning strategies
+Implement Docker image optimization tools
+Configure Docker for seccomp and apparmor
+Calculate the sum of squares from 1 to 100
+Display the contents of docker-compose yml
+Calculate the binomial coefficient C(10,3)
+Create a simple thread pool implementation
+Update environment variables in  env files
+Replace magic numbers with named constants
+Convert procedural code to object-oriented
+Create security policy files for a project
+Generate compliance audit reports for GDPR
+Scrape real estate listings from a website
+Extract data from HTML tables on a webpage
+Show current system information and uptime
+Check for insecure cryptographic practices
+Scan for command injection vulnerabilities
+Check for inefficient loops and iterations
+Analyze configuration management practices
+Search for files with deprecated functions
+Count the number of functions in each file
+Analyze import dependencies across modules
+Show files with high cyclomatic complexity
+Find files with global state modifications
+Set up Kubernetes external DNS integration
+Set up Kubernetes pod anti-affinity for HA
+Configure Docker for multi-platform builds
+Implement Docker container runtime metrics
+Solve a quadratic equation: x² + 5x + 6 = 0
+Generate a singleton pattern implementation
+Generate an observer pattern implementation
+Add new test cases to an existing test file
+Replace string concatenation with f-strings
+Check for insecure direct object references
+Check coding style consistency across files
+Find all files containing 'import requests'
+Implement Kubernetes blue-green deployments
+Design a backup strategy for Docker volumes
+Configure Kubernetes network load balancers
+Design Kubernetes cluster security auditing
+Design a Docker-based CI/CD for mobile apps
+Set up Kubernetes extended resource support
+Design a Docker-based blockchain node setup
+Build a Docker image for a Rust application
+Implement Kubernetes topology aware routing
+Configure Kubernetes node feature discovery
+Display the last 5 lines of requirements txt
+Create a  gitignore file for Python projects
+Calculate the derivative of x³ + 2x² + x + 1
+Create a basic Makefile for a Python project
+Create a context manager for file operations
+Create a factory pattern for object creation
+Create a simple state machine for a workflow
+Update the version number in a setup py file
+Update configuration values in a config file
+Generate comprehensive project documentation
+Perform flake8 style checking on Python code
+Perform bandit security analysis on codebase
+Find all files containing 'password' strings
+Find files that import but don't use modules
+List all files modified in the last 24 hours
+Configure Kubernetes etcd backup and restore
+Implement Kubernetes chaos engineering tests
+Implement Kubernetes vertical pod autoscaler
+Implement Kubernetes pod overhead accounting
+Calculate the area of a circle with radius 10
+Find the greatest common divisor of 48 and 18
+Insert error handling in an existing function
+Insert import statements at the top of a file
+Count the number of lines in all Python files
+Show the largest files in the project by size
+Analyze file size distribution across project
+Create a Docker-based build agent for Jenkins
+Implement Docker image vulnerability patching
+Configure Docker runtime for GPU acceleration
+Set up Kubernetes cluster backup using Velero
+Set up Kubernetes pod share process namespace
+Set up Kubernetes cluster autoscaling with CA
+Calculate the volume of a sphere with radius 5
+Update function signatures with new parameters
+Replace global variables with class attributes
+Analyze authentication and authorization flaws
+Search for files with URL patterns using regex
+Compare two similar files and show differences
+Add a new dependency to a requirements txt file
+Add security checks to authentication functions
+Replace nested if statements with guard clauses
+Create a backup before modifying critical files
+Create automated deployment pipelines for CI/CD
+Create a gradient boosting model for regression
+Find files with specific extensions (e g ,  py)
+Check documentation coverage across the project
+Analyze test coverage statistics for unit tests
+Build a Docker image scanning pipeline in CI/CD
+Design Kubernetes multi-tenancy with namespaces
+Design a Docker-based video processing pipeline
+Generate a rate limiting decorator for API calls
+Insert performance monitoring code in a function
+Refactor a large function into smaller functions
+Optimize database queries for better performance
+Find files larger than specific size (e g , 1MB)
+Scan for hardcoded passwords and secrets in code
+Configure Kubernetes pod priority and preemption
+Design a Docker-based microservices architecture
+Configure Kubernetes external secrets management
+Build a Docker image for a  NET Core application
+Implement Docker container isolation with gVisor
+Create a script for Docker swarm service scaling
+Generate a caching mechanism for function results
+Create a retry decorator with exponential backoff
+Improve error messages for better user experience
+Plot decision tree visualization for a classifier
+Find all Python files modified in the last 7 days
+Perform comprehensive quality report for codebase
+Search for files with email addresses using regex
+Implement Docker container scanning in production
+Design Kubernetes pod topology spread constraints
+Build a Docker image for a Scala Akka application
+Create a script for Docker swarm stack deployment
+Create deployment scripts for a Python application
+Create disaster recovery procedures for a database
+Create a classification model for the iris dataset
+Scrape product information from an e-commerce site
+Analyze algorithm complexity in critical functions
+Configure Docker daemon for remote access with TLS
+Set up Kubernetes dashboard for cluster management
+Build a Docker image for a PHP Laravel application
+Implement Kubernetes resource quotas per namespace
+Design Kubernetes multus CNI for multiple networks
+Create a simple Dockerfile for a Python application
+Generate monitoring configuration for a web service
+Generate performance benchmark scripts for a system
+Perform sentiment analysis on 1000 customer reviews
+Check for memory leaks and inefficient memory usage
+Generate an async/await example for concurrent tasks
+Create data validation schemas for multiple entities
+Perform cross-validation on a machine learning model
+Perform model evaluation and comparison for 3 models
+Extract data from a REST API (e g , public JSON API)
+Check for accessibility compliance in web interfaces
+Build a Docker image for a Ruby on Rails application
+Build a module that cleans and sanitizes HTML content
+Get social media data from an API (e g , Twitter API)
+Extract data from PDF files (e g , financial reports)
+Read the first line of each Python file in the project
+Create a requirements txt file with basic dependencies
+Create a simple pytest ini file for test configuration
+Create a simple GitHub Actions workflow file for CI/CD
+Convert loops to list comprehensions where appropriate
+Generate database migration scripts for schema changes
+Scrape academic paper information from a research site
+Get government data from open APIs (e g , census data)
+Find files with specific attributes (e g , executable)
+Implement Docker secrets management for sensitive data
+Create a script for automated Docker container cleanup
+Design a monitoring alert system for Docker containers
+Build a Docker image for an Elixir Phoenix application
+Add a docstring to the main function in a Python script
+Create integration test scenarios for a web application
+Generate Gantt chart for project timeline with 10 tasks
+Get cryptocurrency prices from an API (e g , CoinGecko)
+Implement Kubernetes rolling updates with zero downtime
+Build a Docker image for a Java Spring Boot application
+Create a script for Docker container metrics collection
+Implement Kubernetes ephemeral containers for debugging
+Calculate compound interest for $1000 at 5% for 10 years
+Generate a logging setup module with basic configuration
+Set up Kubernetes metrics server for resource monitoring
+Implement Docker resource constraints for CPU and memory
+Configure Kubernetes persistent storage with CSI drivers
+Create a Docker registry mirror for offline environments
+Create a simple Python script with a hello world function
+Build a module that extracts TODO comments from codebases
+Build a module that checks if system services are running
+Solve a system of linear equations: 2x + y = 5, x - y = 1
+Create a custom exception hierarchy for a specific domain
+Set up Docker bridge networks for container communication
+Configure Docker logging to external services like Splunk
+Calculate the standard deviation of [1,2,3,4,5,6,7,8,9,10]
+Build a module that synchronizes files between directories
+Find the roots of a cubic equation: x³ - 6x² + 11x - 6 = 0
+Perform hyperparameter tuning for a machine learning model
+Create a Kubernetes operator for managing custom resources
+Create a script to migrate Docker containers between hosts
+Design a Docker swarm mode setup with managers and workers
+Develop a utility that checks software licenses in projects
+Get stock prices from a financial API (e g , Alpha Vantage)
+Check for SQL injection vulnerabilities in database queries
+Analyze code complexity metrics using cyclomatic complexity
+Analyze code complexity by file using cyclomatic complexity
+Create a simple docker-compose yml file for a Python service
+Scrape weather data from a public API (e g , OpenWeatherMap)
+Extract data from a Wikipedia page (e g , list of countries)
+Create a Docker registry setup with authentication and HTTPS
+Design a Kubernetes-based serverless framework using Knative
+Build a module that analyzes font files and extracts metadata
+Calculate feature importance scores for a random forest model
+Task 007: Implement data pipeline failure recovery mechanisms
+Task 007: Implement data pipeline failure recovery mechanisms
+Task 007: Implement data pipeline failure recovery mechanisms
+Configure Docker storage drivers for performance optimization
+Build a Docker-based testing environment for end-to-end tests
+Find the eigenvalues of a 3x3 matrix [[1,2,0],[2,1,2],[0,2,1]]
+Create a simple CONTRIBUTING md file for project contributions
+Create word cloud from text data (e g , 1000 customer reviews)
+Perform A/B test analysis on two groups with 1000 samples each
+Task 010: Resolve data inconsistency issues in a feature store
+Task 010: Resolve data inconsistency issues in a feature store
+Task 010: Resolve data inconsistency issues in a feature store
+Design Kubernetes pod disruption budgets for high availability
+Implement Kubernetes config maps for application configuration
+Configure Docker overlay networks for multi-host communication
+Train a decision tree classifier on a dataset with 1000 samples
+Train a random forest classifier on a dataset with 1000 samples
+Create a support vector machine model for binary classification
+Scrape news headlines from a website (e g , news site homepage)
+Create a basic tox ini file for testing multiple Python versions
+Generate network graphs for social connections (e g , 100 nodes)
+Task 015: Implement a GitOps-based infrastructure as code system
+Task 011: Troubleshoot distributed system communication failures
+Task 015: Implement a GitOps-based infrastructure as code system
+Task 011: Troubleshoot distributed system communication failures
+Task 015: Implement a GitOps-based infrastructure as code system
+Task 011: Troubleshoot distributed system communication failures
+Create a Python script that prints 'Hello, World!' to the console
+Create a Python script that validates JavaScript syntax and style
+Create a Python script that generates thumbnails from video files
+Task 013: Remediate security vulnerabilities in a web application
+Task 014: Fix API rate limiting issues for a high-traffic service
+Task 013: Remediate security vulnerabilities in a web application
+Task 014: Fix API rate limiting issues for a high-traffic service
+Task 013: Remediate security vulnerabilities in a web application
+Task 014: Fix API rate limiting issues for a high-traffic service
+Implement Docker health checks for containers with custom scripts
+Implement Docker content trust for image signing and verification
+Design a multi-node Kubernetes cluster installation using kubeadm
+Build a Docker image for a Golang application with static linking
+Design Kubernetes storage classes for different performance tiers
+Create a box plot for outlier detection in dataset [1,2,3,4,5,100]
+Create a box plot for outlier detection in dataset [1,2,3,4,5,100]
+Perform a security scan of the entire codebase for vulnerabilities
+Build a multi-architecture Docker image supporting AMD64 and ARM64
+Generate a complete script that generates various types of barcodes
+Develop a utility that minifies CSS files and removes unused styles
+Build a module that cleans up temporary files and empty directories
+Develop a utility that extracts ZIP archives with progress tracking
+Develop a utility that schedules automated backups with compression
+Create a basic  pre-commit-config yaml file for code quality checks
+Create a computer vision model for object detection on COCO dataset
+Set up Kubernetes network policies to restrict traffic between pods
+Configure Kubernetes liveness and readiness probes for applications
+Create a Python script that calculates statistics for text documents
+Build a module that scans network ports and identifies open services
+Create a configuration parser class for handling INI or JSON configs
+Identify outliers in numerical data (e g , dataset with 1000 values)
+Task 004: Optimize Docker multi-stage builds for size and build time
+Task 004: Optimize Docker multi-stage builds for size and build time
+Task 004: Optimize Docker multi-stage builds for size and build time
+Optimize Kubernetes resource requests and limits for cost efficiency
+Set up Kubernetes webhook validation for custom resource definitions
+Build a module that reads Excel files and converts them to CSV format
+Write a comprehensive script that creates backups of SQLite databases
+Create a database model using an ORM for a simple entity (e g , User)
+Analyze sales data and find trends (e g , monthly sales over 2 years)
+Train a time series forecasting model on daily sales data for 2 years
+Create animated plots for time series (e g , stock prices over 1 year)
+Task 007: Review CI/CD pipeline architecture for speed and reliability
+Task 007: Review CI/CD pipeline architecture for speed and reliability
+Task 007: Review CI/CD pipeline architecture for speed and reliability
+Design a backup and restore strategy for Kubernetes persistent volumes
+Create a Python script that connects to FTP servers and transfers files
+Write a comprehensive script that resolves domain names to IP addresses
+Generate code from a template with parameters (e g , REST API template)
+Create configuration files for different environments (e g , dev, prod)
+Plot geographical data on a map (e g , sales by city for 100 locations)
+Create sankey diagram for flow analysis (e g , energy consumption flow)
+Generate a complete script that counts words, characters, and paragraphs
+Create a Python script that scans QR codes from images and extracts data
+Develop a utility that merges multiple CSV files with duplicate handling
+Perform k-means clustering on a dataset with 1000 samples and 3 features
+Perform a neural network training for digit recognition on MNIST dataset
+Task 019: Implement multi-region load balancing for a global application
+Task 019: Implement multi-region load balancing for a global application
+Task 019: Implement multi-region load balancing for a global application
+Implement Docker multi-container pods in Kubernetes for sidecar patterns
+Configure Kubernetes affinity and anti-affinity rules for pod scheduling
+Create a Python script that validates URLs and checks their accessibility
+Create a Python script that monitors running processes and resource usage
+Solve a differential equation: dy/dx = -2xy with initial condition y(0)=1
+Create a data validation schema using a validation library for user input
+Perform time series analysis on sales data (e g , daily sales for 1 year)
+Create an anomaly detection system for network traffic with 10000 packets
+Task 018: Implement intelligent resource optimization for cloud workloads
+Task 009: Resolve CI/CD pipeline failures for a multi-service application
+Task 018: Implement intelligent resource optimization for cloud workloads
+Task 009: Resolve CI/CD pipeline failures for a multi-service application
+Task 018: Implement intelligent resource optimization for cloud workloads
+Task 009: Resolve CI/CD pipeline failures for a multi-service application
+Design a logging aggregation system for Kubernetes clusters using Fluentd
+Write a comprehensive script that extracts comments from source code files
+Create a heatmap of a correlation matrix for 5 variables with 1000 samples
+Calculate confidence intervals for sample data (e g , mean of 100 samples)
+Calculate customer lifetime value for 1000 customers with purchase history
+Task 011: Analyze monitoring stack for coverage and alerting effectiveness
+Task 012: Troubleshoot and resolve database performance degradation issues
+Task 032: Implement automated model governance for compliance and auditing
+Task 011: Analyze monitoring stack for coverage and alerting effectiveness
+Task 012: Troubleshoot and resolve database performance degradation issues
+Task 032: Implement automated model governance for compliance and auditing
+Task 011: Analyze monitoring stack for coverage and alerting effectiveness
+Task 012: Troubleshoot and resolve database performance degradation issues
+Task 032: Implement automated model governance for compliance and auditing
+Create multiple related files for a feature (e g , model, controller, view)
+Generate a violin plot for distribution analysis of dataset [1,2,3,4,5,100]
+Task 005: Analyze GitOps workflow implementation for infrastructure as code
+Task 006: Analyze Terraform infrastructure for security and cost efficiency
+Task 005: Analyze GitOps workflow implementation for infrastructure as code
+Task 006: Analyze Terraform infrastructure for security and cost efficiency
+Task 005: Analyze GitOps workflow implementation for infrastructure as code
+Task 006: Analyze Terraform infrastructure for security and cost efficiency
+Set up Kubernetes service accounts for pod authentication to cloud services
+Generate a REST API endpoint using a web framework for basic CRUD operations
+Generate a CLI script using argparse for basic command-line argument parsing
+Create summary statistics for a dataset (e g , 1000 samples with 5 features)
+Task 012: Design a multi-cloud data replication system for high availability
+Task 013: Create an advanced MLOps monitoring platform for model performance
+Task 015: Resolve model serving latency problems in a production environment
+Task 012: Design a multi-cloud data replication system for high availability
+Task 013: Create an advanced MLOps monitoring platform for model performance
+Task 015: Resolve model serving latency problems in a production environment
+Task 012: Design a multi-cloud data replication system for high availability
+Task 013: Create an advanced MLOps monitoring platform for model performance
+Task 015: Resolve model serving latency problems in a production environment
+Configure Kubernetes helm charts for a complex application with dependencies
+Create a comprehensive script that parses Markdown files and converts to HTML
+Build a module that parses XML files and converts them to Python dictionaries
+Train a linear regression model on a dataset with 1000 samples and 5 features
+Analyze survey response data (e g , 1000 responses with Likert scale ratings)
+Perform natural language processing for text classification on 1000 documents
+Task 009: Optimize database schema and queries for a high-traffic application
+Task 017: Design an advanced security framework for a distributed application
+Task 009: Optimize database schema and queries for a high-traffic application
+Task 017: Design an advanced security framework for a distributed application
+Task 009: Optimize database schema and queries for a high-traffic application
+Task 017: Design an advanced security framework for a distributed application
+Create a comprehensive script that finds duplicate files using hash comparison
+Create a complete script that merges multiple PDF files into a single document
+Write a comprehensive script that monitors network traffic and bandwidth usage
+Create a treemap visualization of hierarchical data (e g , department budgets)
+Perform cohort analysis on customer data (e g , 1000 customers over 12 months)
+Task 015: Perform compliance and governance review for a financial application
+Task 016: Build an automated disaster recovery system with failover and backup
+Task 014: Create a Kubernetes operator for managing machine learning workloads
+Task 011: Build a real-time model serving system with A/B testing capabilities
+Task 015: Perform compliance and governance review for a financial application
+Task 016: Build an automated disaster recovery system with failover and backup
+Task 014: Create a Kubernetes operator for managing machine learning workloads
+Task 011: Build a real-time model serving system with A/B testing capabilities
+Task 015: Perform compliance and governance review for a financial application
+Task 016: Build an automated disaster recovery system with failover and backup
+Task 014: Create a Kubernetes operator for managing machine learning workloads
+Task 011: Build a real-time model serving system with A/B testing capabilities
+Configure Kubernetes role-based access control (RBAC) for different user roles
+Create a script to scan Docker images for vulnerabilities using Trivy or Clair
+Task 003: Analyze Kubernetes cluster configuration for performance and security
+Task 006: Identify and fix memory leaks in a machine learning training pipeline
+Task 008: Troubleshoot container orchestration performance issues in Kubernetes
+Task 003: Analyze Kubernetes cluster configuration for performance and security
+Task 006: Identify and fix memory leaks in a machine learning training pipeline
+Task 008: Troubleshoot container orchestration performance issues in Kubernetes
+Task 003: Analyze Kubernetes cluster configuration for performance and security
+Task 006: Identify and fix memory leaks in a machine learning training pipeline
+Task 008: Troubleshoot container orchestration performance issues in Kubernetes
+Generate a complete script that tests REST API endpoints and validates responses
+Analyze missing data patterns in a dataset (e g , 1000 rows with missing values)
+Build a CI pipeline to automatically build and push Docker images on code commit
+Generate a complete script that tests SMTP server connectivity and authentication
+Task 020: Build an NLP model serving infrastructure for real-time text processing
+Task 016: Create an automated feature engineering pipeline for data preprocessing
+Task 020: Build an NLP model serving infrastructure for real-time text processing
+Task 016: Create an automated feature engineering pipeline for data preprocessing
+Task 020: Build an NLP model serving infrastructure for real-time text processing
+Task 016: Create an automated feature engineering pipeline for data preprocessing
+Create a complete script that formats and validates JSON data with pretty printing
+Task 014: Perform cloud cost optimization analysis for a multi-service application
+Task 018: Create a real-time fraud detection system with streaming data processing
+Task 014: Perform cloud cost optimization analysis for a multi-service application
+Task 018: Create a real-time fraud detection system with streaming data processing
+Task 014: Perform cloud cost optimization analysis for a multi-service application
+Task 018: Create a real-time fraud detection system with streaming data processing
+Write a comprehensive script that calculates MD5, SHA1, and SHA256 hashes for files
+Perform principal component analysis on a dataset with 1000 samples and 10 features
+Task 010: Perform a security configuration assessment for a cloud-based application
+Task 019: Build a computer vision model deployment pipeline for real-time inference
+Write a comprehensive script that calculates MD5, SHA1, and SHA256 hashes for files
+Task 010: Perform a security configuration assessment for a cloud-based application
+Task 019: Build a computer vision model deployment pipeline for real-time inference
+Write a comprehensive script that calculates MD5, SHA1, and SHA256 hashes for files
+Task 010: Perform a security configuration assessment for a cloud-based application
+Task 019: Build a computer vision model deployment pipeline for real-time inference
+Implement Docker logging drivers for centralized logging with ELK stack integration
+Calculate matrix multiplication for two 2x2 matrices [[1,2],[3,4]] and [[5,6],[7,8]]
+Create a pie chart of market share data (e g , companies A:40%, B:30%, C:20%, D:10%)
+Plot multiple time series on one graph (e g , sales data for 3 products over 1 year)
+Create a pie chart of market share data (e g , companies A:40%, B:30%, C:20%, D:10%)
+Task 012: Review API gateway configuration for performance and security optimization
+Task 013: Analyze service mesh architecture for traffic management and observability
+Task 031: Design an intelligent data pipeline orchestration system for ETL workflows
+Task 012: Review API gateway configuration for performance and security optimization
+Task 013: Analyze service mesh architecture for traffic management and observability
+Task 031: Design an intelligent data pipeline orchestration system for ETL workflows
+Task 012: Review API gateway configuration for performance and security optimization
+Task 013: Analyze service mesh architecture for traffic management and observability
+Task 031: Design an intelligent data pipeline orchestration system for ETL workflows
+Calculate correlation matrix for multiple variables (e g , 5 variables, 1000 samples)
+Calculate correlation matrix for multiple variables (e g , 5 variables, 1000 samples)
+Create data quality reports for a dataset (e g , 1000 rows with missing/invalid data)
+Generate a complete script that analyzes disk usage and identifies large files (>10MB)
+Develop a utility that translates text using translation APIs (e g , Google Translate)
+Develop a utility that converts audio files between different formats (e g , MP3, WAV)
+Generate a scatter plot with correlation line for datasets [1,2,3,4,5] and [2,4,5,4,5]
+Generate a scatter plot with correlation line for datasets [1,2,3,4,5] and [2,4,5,4,5]
+Task 030: Build a multi-modal AI platform supporting text, image, and audio processing
+Task 030: Build a multi-modal AI platform supporting text, image, and audio processing
+Task 030: Build a multi-modal AI platform supporting text, image, and audio processing
+Calculate the correlation coefficient between two datasets [1,2,3,4,5] and [2,4,6,8,10]
+Create parallel coordinates plot for multivariate data (e g , 5 features, 1000 samples)
+Task 029: Design a real-time data lake architecture for streaming data with 1PB storage
+Task 001: Analyze machine learning pipeline architecture for scalability and efficiency
+Task 017: Implement distributed hyperparameter optimization for machine learning models
+Task 029: Design a real-time data lake architecture for streaming data with 1PB storage
+Task 001: Analyze machine learning pipeline architecture for scalability and efficiency
+Task 017: Implement distributed hyperparameter optimization for machine learning models
+Task 029: Design a real-time data lake architecture for streaming data with 1PB storage
+Task 001: Analyze machine learning pipeline architecture for scalability and efficiency
+Task 017: Implement distributed hyperparameter optimization for machine learning models
+Create Kubernetes cron jobs for scheduled tasks like data backups, with resource limits
+Implement Docker security best practices including user namespaces and seccomp profiles
+Perform data cleaning on a messy dataset (e g , missing values, duplicates in 1000 rows)
+Perform dimensionality reduction with PCA on a dataset with 1000 samples and 10 features
+Perform data cleaning on a messy dataset (e g , missing values, duplicates in 1000 rows)
+Perform data normalization and scaling on a dataset (e g , 1000 samples with 5 features)
+Design a Docker-based development environment with hot-reloading for a React application
+Develop a utility that gathers comprehensive system information (e g , CPU, memory, disk)
+Create a deep learning model with TensorFlow for image classification on CIFAR-10 dataset
+Task 027: Create an edge AI deployment pipeline for IoT devices with over-the-air updates
+Task 008: Analyze microservices communication patterns for latency and reliability issues
+Task 027: Create an edge AI deployment pipeline for IoT devices with over-the-air updates
+Task 008: Analyze microservices communication patterns for latency and reliability issues
+Task 027: Create an edge AI deployment pipeline for IoT devices with over-the-air updates
+Task 008: Analyze microservices communication patterns for latency and reliability issues
+Set up Kubernetes cluster monitoring with Prometheus and Grafana, including node exporter
+Build a module that organizes files into folders based on criteria (e g , file type, date)
+Create cross-tabulation tables for categorical data (e g , customer preferences by region)
+Create pivot tables from raw data (e g , sales by region and product for 1000 transactions)
+Create pivot tables from raw data (e g , sales by region and product for 1000 transactions)
+Implement Kubernetes stateful sets for a distributed database like MongoDB with replica sets
+Task 028: Implement a federated learning infrastructure for privacy-preserving model training
+Task 028: Implement a federated learning infrastructure for privacy-preserving model training
+Task 028: Implement a federated learning infrastructure for privacy-preserving model training
+Develop a utility that renames multiple files using patterns (e g , prefix, suffix, numbering)
+Task 002: Explain and optimize a data engineering ETL pipeline for large-scale data processing
+Task 020: Build an advanced analytics platform with real-time dashboards and predictive models
+Task 002: Explain and optimize a data engineering ETL pipeline for large-scale data processing
+Task 020: Build an advanced analytics platform with real-time dashboards and predictive models
+Task 002: Explain and optimize a data engineering ETL pipeline for large-scale data processing
+Task 020: Build an advanced analytics platform with real-time dashboards and predictive models
+Generate a complete script that validates email addresses using regex patterns and DNS checking
+Analyze customer segmentation data (e g , 1000 customers with demographics and purchase history)
+Generate a complete script that validates configuration files against schemas (e g , JSON schema)
+Perform statistical hypothesis testing on sample data (e g , t-test on two groups of 100 samples)
+Perform statistical hypothesis testing on sample data (e g , t-test on two groups of 100 samples)
+Task 022: Implement a multi-region disaster recovery system for a database with automated failover
+Task 022: Implement a multi-region disaster recovery system for a database with automated failover
+Task 022: Implement a multi-region disaster recovery system for a database with automated failover
+Create a complete script that extracts metadata from various file types (e g , images, PDFs, audio)
+Create a histogram of random data with 1000 samples drawn from a normal distribution (mean=0, std=1)
+Create a Python script that parses various log file formats and extracts data (e g , Apache, syslog)
+Create a pandas DataFrame with sample employee data (e g , 100 employees with ID, name, age, salary)
+Create a pandas DataFrame with sample employee data (e g , 100 employees with ID, name, age, salary)
+Design a multi-stage CI/CD pipeline using Docker for building, testing, and deploying a microservice
+Generate a complete script that generates color palettes for design projects (e g , 5-color palettes)
+Calculate moving averages for stock prices (e g , 50-day moving average for daily prices over 1 year)
+Create a Python class for user management with methods for create, update, delete, and authentication
+Calculate moving averages for stock prices (e g , 50-day moving average for daily prices over 1 year)
+Task 026: Build an autonomous machine learning platform with automated model selection and deployment
+Task 026: Build an autonomous machine learning platform with automated model selection and deployment
+Task 026: Build an autonomous machine learning platform with automated model selection and deployment
+Generate a complete script that formats source code with consistent styling (e g , Python, JavaScript)
+Create a bar chart of categorical data (e g , sales by product category: electronics, clothing, books)
+Create a bar chart of categorical data (e g , sales by product category: electronics, clothing, books)
+Task 023: Perform security hardening for a machine learning platform, including model poisoning defense
+Task 023: Perform security hardening for a machine learning platform, including model poisoning defense
+Task 023: Perform security hardening for a machine learning platform, including model poisoning defense
+Generate a complete script that resizes images while maintaining aspect ratios (e g , resize to 800x600)
+Create a Python script that rotates log files based on size (e g , 10MB) and date criteria (e g , daily)
+Task 024: Optimize costs for cloud-based machine learning workloads with spot instances and auto-scaling
+Task 024: Optimize costs for cloud-based machine learning workloads with spot instances and auto-scaling
+Task 024: Optimize costs for cloud-based machine learning workloads with spot instances and auto-scaling
+Task 021: Design a zero-downtime deployment strategy for a web application with 99 99% uptime requirement
+Task 021: Design a zero-downtime deployment strategy for a web application with 99 99% uptime requirement
+Task 021: Design a zero-downtime deployment strategy for a web application with 99 99% uptime requirement
+Configure Kubernetes ingress controller with SSL termination and path-based routing for multiple services
+Design a complete Kubernetes-based service mesh with Istio for traffic management, security, and observability
+Optimize Docker image size for a Node js application by using alpine base and removing unnecessary dependencies
+Configure Kubernetes horizontal pod autoscaler for a deployment based on CPU utilization, with min 2 max 10 pods
+Implement Kubernetes persistent volume claims for stateful applications like databases, with dynamic provisioning
+Create a recommendation system for movies using collaborative filtering on a dataset with 1000 users and 500 movies
+Create a Docker Swarm cluster setup script for 3 nodes, including service deployment with replicas and health checks
+Create a simple test file with unit tests for a calculator function (addition, subtraction, multiplication, division)
+Build a custom Docker base image for Python applications with pre-installed scientific libraries like NumPy and SciPy
+Design a Kubernetes namespace isolation strategy for multi-tenant applications with resource quotas and network policies
+Build a Docker image for a machine learning model serving API using TensorFlow Serving, with optimized layers for caching
+Set up Kubernetes secrets management for sensitive data like API keys, with injection into pods via environment variables
+Task 025: Implement an observability stack with metrics collection, logging, tracing, and visualization for a distributed system
+Task 025: Implement an observability stack with metrics collection, logging, tracing, and visualization for a distributed system
+Task 025: Implement an observability stack with metrics collection, logging, tracing, and visualization for a distributed system
+Build a distributed database with sharding, replication, consensus, 1PB+ data, 99 999% availability, disaster recovery, and backup
+Build a distributed database with sharding, replication, consensus, 1PB+ data, 99 999% availability, disaster recovery, and backup
+Build a distributed database with sharding, replication, consensus, 1PB+ data, 99 999% availability, disaster recovery, and backup
+Set up a Kubernetes deployment for a stateless web service with 3 replicas, including YAML manifests for deployment, service, and ingress
+Create a Python script that generates secure passwords with customizable length and character sets (e g , letters, digits, symbols, length 8-16)
+Create a Docker container for a simple Python web application using Flask, including Dockerfile with multi-stage build for production optimization
+Implement Docker Compose for a multi-service application with database, backend, and frontend, including volume mounting and network configuration
+Perform a comprehensive market analysis including market size estimation and growth projections using example current size $1B and growth rate 5% annual
+Build a distributed content delivery network with edge computing, global distribution, 10Gbps+ throughput, 100+ locations, DDoS protection, and failover
+Build a distributed content delivery network with edge computing, global distribution, 10Gbps+ throughput, 100+ locations, DDoS protection, and failover
+Build a distributed content delivery network with edge computing, global distribution, 10Gbps+ throughput, 100+ locations, DDoS protection, and failover
+Calculate the optimal pricing strategy using price elasticity analysis and competitor pricing data with example elasticity -1 5 and competitor prices [10, 12, 15]
+Create a complete script with a Calculator class that has methods for addition, subtraction, multiplication, division, and includes error handling for division by zero
+Build a distributed message streaming platform with high throughput, low latency, durability, 10M+ messages/sec, petabyte storage, exactly-once delivery, and monitoring
+Build a distributed message streaming platform with high throughput, low latency, durability, 10M+ messages/sec, petabyte storage, exactly-once delivery, and monitoring
+Build a distributed message streaming platform with high throughput, low latency, durability, 10M+ messages/sec, petabyte storage, exactly-once delivery, and monitoring
+Design and implement a complete enterprise-grade ERP platform with workflow automation, reporting, integration, monitoring, backup, and disaster recovery, load balancing
+Design and implement a complete enterprise-grade ERP platform with workflow automation, reporting, integration, monitoring, backup, and disaster recovery, load balancing
+Design and implement a complete enterprise-grade ERP platform with workflow automation, reporting, integration, monitoring, backup, and disaster recovery, load balancing
+Calculate the optimal inventory levels using stochastic demand models and supply chain constraints with example demand mean 100 units/day, std dev 20, and lead time 5 days
+Generate a complete credit scoring model using logistic regression and machine learning techniques with example features like income, age, credit history for 1000 customers
+Create a comprehensive AI/ML system for computer vision with object detection, image classification, model training, inference serving, edge deployment, and model versioning
+Create a comprehensive AI/ML system for computer vision with object detection, image classification, model training, inference serving, edge deployment, and model versioning
+Create a comprehensive AI/ML system for computer vision with object detection, image classification, model training, inference serving, edge deployment, and model versioning
+Create a comprehensive script that includes both recursive and iterative implementations of Fibonacci sequence generation, with a main function that prints the first 20 numbers
+Create a comprehensive script that includes both recursive and iterative implementations of Fibonacci sequence generation, with a main function that prints the first 20 numbers
+Calculate the optimal resource allocation for project management using linear programming with example resources 10 workers, 5 machines, and tasks with requirements [2,3], [1,4]
+Create a comprehensive AI/ML system for natural language processing with text analysis, language generation, fine-tuning, evaluation metrics, scalable serving, and continuous learning
+Create a comprehensive AI/ML system for natural language processing with text analysis, language generation, fine-tuning, evaluation metrics, scalable serving, and continuous learning
+Create a comprehensive AI/ML system for natural language processing with text analysis, language generation, fine-tuning, evaluation metrics, scalable serving, and continuous learning
+Create a complete script with functions to check if a number is prime, generate all primes up to N using Sieve of Eratosthenes, and include a main section that tests with numbers 1-100
+Create a comprehensive AI/ML system for recommendation systems with personalization, collaborative filtering, A/B testing, performance monitoring, real-time inference, and feedback loops
+Create a comprehensive AI/ML system for recommendation systems with personalization, collaborative filtering, A/B testing, performance monitoring, real-time inference, and feedback loops
+Create a comprehensive AI/ML system for recommendation systems with personalization, collaborative filtering, A/B testing, performance monitoring, real-time inference, and feedback loops
+Create a complete customer support platform with ticket management, knowledge base, live chat  Include user portal, SLA tracking, automation rules, reporting, integrations, and mobile app
+Create a complete module with functions for string reversal, case conversion, character counting, palindrome checking, and word frequency analysis, including comprehensive docstrings and examples
+Build a comprehensive learning management system with course creation, student enrollment, progress tracking  Implement quizzes, assignments, grading, certificates, discussions, and video streaming
+Analyze and decide whether to migrate to microservices for an e-commerce platform  Consider scalability, cost, team expertise and provide comprehensive analysis with pros, cons, and recommendations
+Analyze and decide whether to migrate to microservices for an e-commerce platform  Consider scalability, cost, team expertise and provide comprehensive analysis with pros, cons, and recommendations
+Create a complete healthcare management system with patient records, appointment scheduling, billing  Include prescription management, lab results, insurance, telemedicine, reporting, and compliance
+Analyze and decide whether to adopt cloud-native architecture for a financial system  Consider security, compliance, performance and provide comprehensive analysis with pros, cons, and recommendations
+Analyze and decide whether to adopt cloud-native architecture for a financial system  Consider security, compliance, performance and provide comprehensive analysis with pros, cons, and recommendations
+Generate a complete actuarial analysis for insurance premiums including mortality tables and risk factors using standard mortality table data for ages 20-80 and risk factors like smoking 1 5 multiplier
+Design and implement a real estate platform with property listings, search functionality, agent profiles  Build virtual tours, mortgage calculator, CRM, mobile app, map integration, and lead management
+Develop a full-featured event management platform with event creation, ticket sales, attendee management  Include venue booking, speaker management, scheduling, mobile app, check-in system, and analytics
+Build a comprehensive blog management system with post creation, user comments, category management  Implement user roles, SEO optimization, media handling, social sharing, RSS feeds, and search functionality
+Build a comprehensive restaurant management system with menu management, order processing, table reservations  Implement inventory tracking, staff scheduling, POS, delivery integration, loyalty program, and analytics
+Analyze and decide whether to implement event-driven design for a healthcare application  Consider maintainability, reliability, user experience and provide comprehensive analysis with pros, cons, and recommendations
+Analyze and decide whether to implement event-driven design for a healthcare application  Consider maintainability, reliability, user experience and provide comprehensive analysis with pros, cons, and recommendations
+Generate a complete requirements txt file for a data science project including specific versions: pandas==1 5 3, numpy==1 24 3, matplotlib==3 7 1, seaborn==0 12 2, scikit-learn==1 2 2, jupyter==1 0 0, requests==2 31 0
+Create a comprehensive e-commerce platform with product catalog, shopping cart, payment processing  Include user authentication, order management, inventory tracking, admin dashboard, analytics, and email notifications
+Design and implement a complete enterprise-grade trading system with high-frequency processing, risk management, performance, reliability, audit trails, regulatory compliance (MiFID II, Dodd-Frank), and data encryption
+Design and implement a complete enterprise-grade trading system with high-frequency processing, risk management, performance, reliability, audit trails, regulatory compliance (MiFID II, Dodd-Frank), and data encryption
+Design and implement a complete enterprise-grade trading system with high-frequency processing, risk management, performance, reliability, audit trails, regulatory compliance (MiFID II, Dodd-Frank), and data encryption
+Perform a comprehensive risk assessment for a loan portfolio including probability of default and expected losses using example portfolio of 100 loans with amounts [10000, 20000,    ] and default probs [0 01, 0 02,    ]
+Develop a full-featured task management application with project creation, task assignment, progress tracking  Include team collaboration, time tracking, reporting, notifications, file attachments, and calendar integration
+Create a comprehensive module with regex-based validation functions for email addresses, phone numbers (US format), postal codes (US and international), credit card numbers, and URLs, including test cases for each validator
+Write a complete logging utility that supports multiple log levels (DEBUG, INFO, WARNING, ERROR, CRITICAL), file rotation, custom formatters, and includes both console and file handlers with timestamp and caller information
+Create a comprehensive module with regex-based validation functions for email addresses, phone numbers (US format), postal codes (US and international), credit card numbers, and URLs, including test cases for each validator
+Write a complete logging utility that supports multiple log levels (DEBUG, INFO, WARNING, ERROR, CRITICAL), file rotation, custom formatters, and includes both console and file handlers with timestamp and caller information
+Create a comprehensive module with regex-based validation functions for email addresses, phone numbers (US format), postal codes (US and international), credit card numbers, and URLs, including test cases for each validator
+Write a complete logging utility that supports multiple log levels (DEBUG, INFO, WARNING, ERROR, CRITICAL), file rotation, custom formatters, and includes both console and file handlers with timestamp and caller information
+Design and implement an inventory management system platform with product tracking, stock alerts, supplier management  Build barcode scanning, reporting, multi-location support, purchase orders, receiving, and cycle counting
+Perform a comprehensive statistical analysis of customer purchase patterns including seasonality, trends, and correlation analysis using example data like daily purchases over 2 years with amounts [100, 150, 200,    ] and dates
+Create a complete script with a BankAccount class with properties for account number, balance, account holder name, methods for deposit, withdraw, transfer, get_statement, and include transaction history tracking with timestamps
+Generate a complete financial model for a startup including cash flow projections, break-even analysis, and sensitivity testing using example revenue growth rate 20% annual, costs $50000 initial, and variables like price sensitivity
+Create a configuration file with realistic database connection settings including host (localhost), port (5432), username (admin), password (secure123), database name (production_db), connection pool settings, and timeout configurations
+Create a complete JSON configuration file with realistic database connection settings including host (localhost), port (5432), username (admin), password (secure123), database name (production_db), connection pool settings, and timeout configurations
+Create a complete JSON configuration file with realistic database connection settings including host (localhost), port (5432), username (admin), password (secure123), database name (production_db), connection pool settings, and timeout configurations
+Develop a complete e-commerce microservice: Create services for product CRUD operations, stock management, order processing, payment handling, email alerts, and API routing  Include Docker configuration, database schemas, and service communication protocols
+Develop a complete e-commerce microservice: Create services for product CRUD operations, stock management, order processing, payment handling, email alerts, and API routing  Include Docker configuration, database schemas, and service communication protocols
+Develop a complete e-commerce microservice: Create services for product CRUD operations, stock management, order processing, payment handling, email alerts, and API routing  Include Docker configuration, database schemas, and service communication protocols
+Build a comprehensive data pipeline system: Create scripts for reading multiple CSV files, cleaning and processing data, quality checks, database operations, workflow management, and configuration  Include logging, error handling, and monitoring capabilities
+Build a comprehensive data pipeline system: Create scripts for reading multiple CSV files, cleaning and processing data, quality checks, database operations, workflow management, and configuration  Include logging, error handling, and monitoring capabilities
+Build a comprehensive data pipeline system: Create scripts for reading multiple CSV files, cleaning and processing data, quality checks, database operations, workflow management, and configuration  Include logging, error handling, and monitoring capabilities
+Build a complete monitoring and alerting system: Create scripts for system metrics gathering, log analysis, threshold monitoring, multi-channel alerts, visualization, and web interface  Include real-time monitoring, historical data storage, and customizable alert rules
+Build a complete monitoring and alerting system: Create scripts for system metrics gathering, log analysis, threshold monitoring, multi-channel alerts, visualization, and web interface  Include real-time monitoring, historical data storage, and customizable alert rules
+Build a complete monitoring and alerting system: Create scripts for system metrics gathering, log analysis, threshold monitoring, multi-channel alerts, visualization, and web interface  Include real-time monitoring, historical data storage, and customizable alert rules
+Create a comprehensive machine learning project: Generate scripts for dataset handling, data preprocessing, training multiple ML algorithms, performance metrics evaluation, inference serving, and end-to-end workflow  Include model versioning, experiment tracking, and automated retraining
+Create a comprehensive machine learning project: Generate scripts for dataset handling, data preprocessing, training multiple ML algorithms, performance metrics evaluation, inference serving, and end-to-end workflow  Include model versioning, experiment tracking, and automated retraining
+Create a comprehensive machine learning project: Generate scripts for dataset handling, data preprocessing, training multiple ML algorithms, performance metrics evaluation, inference serving, and end-to-end workflow  Include model versioning, experiment tracking, and automated retraining
+Calculate the optimal investment portfolio allocation using Monte Carlo simulation for 10 different assets with example historical returns [0 05, 0 07, 0 06, 0 08, 0 04, 0 09, 0 03, 0 10, 0 02, 0 11] and risk metrics like standard deviations [0 1, 0 12, 0 11, 0 13, 0 09, 0 14, 0 08, 0 15, 0 07, 0 16]
+Assess whether to implement GraphQL or stick with REST APIs for a mobile application backend serving 1M+ users  Consider API flexibility, caching strategies, mobile bandwidth optimization, development complexity, tooling ecosystem, performance implications, backward compatibility, and team learning curve
+Create a complete REST API project for a library management system: Generate models with Book, Author, Member classes, database handling with SQLite connection and CRUD operations, API endpoints for book management, authentication with JWT token handling, and a main script to run the server  Include sample data insertion and comprehensive error handling
+Create a complete REST API project for a library management system: Generate models with Book, Author, Member classes, database handling with SQLite connection and CRUD operations, API endpoints for book management, authentication with JWT token handling, and a main script to run the server  Include sample data insertion and comprehensive error handling
+Create a complete REST API project for a library management system: Generate models with Book, Author, Member classes, database handling with SQLite connection and CRUD operations, API endpoints for book management, authentication with JWT token handling, and a main script to run the server  Include sample data insertion and comprehensive error handling
+Evaluate the choice between React, Vue js, and Angular for rebuilding an enterprise dashboard application  Consider factors including component reusability, TypeScript support, enterprise features, long-term maintenance, team expertise, ecosystem maturity, performance requirements for real-time data visualization, and integration with existing Java backend
+Determine whether to build an in-house data warehouse solution or adopt a cloud-based solution like Snowflake or BigQuery for an analytics platform  Analyze data volume (100TB+), query performance requirements, cost projections over 3 years, data governance needs, integration complexity with existing systems, team capabilities, and long-term strategic alignment
+Evaluate the decision to adopt Kubernetes vs Docker Swarm vs AWS ECS for container orchestration in a financial services application  Consider compliance requirements (SOX, PCI DSS), high availability needs (99 99% uptime), security concerns, operational complexity, cost implications, team expertise, vendor lock-in risks, and scalability requirements for 1000+ microservices
+Create a complete energy consumption optimization system: Generate energy usage data with smart meter data including timestamp, device_id, power_consumption, temperature, occupancy, and tariff_rates  Build an energy optimizer that identifies consumption patterns, predicts peak usage, recommends optimization strategies, calculates cost savings, and creates energy efficiency reports with ROI analysis
+Create a complete energy consumption optimization system: Generate energy usage data with smart meter data including timestamp, device_id, power_consumption, temperature, occupancy, and tariff_rates  Build an energy optimizer that identifies consumption patterns, predicts peak usage, recommends optimization strategies, calculates cost savings, and creates energy efficiency reports with ROI analysis
+Create a complete energy consumption optimization system: Generate energy usage data with smart meter data including timestamp, device_id, power_consumption, temperature, occupancy, and tariff_rates  Build an energy optimizer that identifies consumption patterns, predicts peak usage, recommends optimization strategies, calculates cost savings, and creates energy efficiency reports with ROI analysis
+Develop a comprehensive message streaming platform with distributed consensus, exactly-once delivery guarantees, schema evolution, stream processing capabilities, multi-tenancy, geographic replication, compaction strategies, monitoring and alerting, and integration with analytics systems  Support 10M+ messages/second throughput, petabyte-scale storage, and sub-millisecond latency for real-time applications
+Develop a comprehensive message streaming platform with distributed consensus, exactly-once delivery guarantees, schema evolution, stream processing capabilities, multi-tenancy, geographic replication, compaction strategies, monitoring and alerting, and integration with analytics systems  Support 10M+ messages/second throughput, petabyte-scale storage, and sub-millisecond latency for real-time applications
+Develop a comprehensive message streaming platform with distributed consensus, exactly-once delivery guarantees, schema evolution, stream processing capabilities, multi-tenancy, geographic replication, compaction strategies, monitoring and alerting, and integration with analytics systems  Support 10M+ messages/second throughput, petabyte-scale storage, and sub-millisecond latency for real-time applications
+Build a comprehensive network traffic analysis system: Create network logs data with 50000 network packets including source_ip, destination_ip, protocol, port, packet_size, timestamp, and payload_type  Develop a network analyzer that detects anomalies, identifies security threats, analyzes bandwidth usage patterns, creates network topology maps, and generates security incident reports with threat intelligence
+Build a comprehensive network traffic analysis system: Create network logs data with 50000 network packets including source_ip, destination_ip, protocol, port, packet_size, timestamp, and payload_type  Develop a network analyzer that detects anomalies, identifies security threats, analyzes bandwidth usage patterns, creates network topology maps, and generates security incident reports with threat intelligence
+Build a comprehensive network traffic analysis system: Create network logs data with 50000 network packets including source_ip, destination_ip, protocol, port, packet_size, timestamp, and payload_type  Develop a network analyzer that detects anomalies, identifies security threats, analyzes bandwidth usage patterns, creates network topology maps, and generates security incident reports with threat intelligence
+Build a complete container orchestration platform with custom scheduler, service mesh integration, auto-scaling based on custom metrics, multi-cluster management, GitOps deployment pipeline, security policy enforcement, network policy management, storage orchestration, and integration with CI/CD systems  Include support for 10,000+ nodes, 1M+ containers, advanced scheduling algorithms, and comprehensive observability
+Build a complete container orchestration platform with custom scheduler, service mesh integration, auto-scaling based on custom metrics, multi-cluster management, GitOps deployment pipeline, security policy enforcement, network policy management, storage orchestration, and integration with CI/CD systems  Include support for 10,000+ nodes, 1M+ containers, advanced scheduling algorithms, and comprehensive observability
+Build a complete container orchestration platform with custom scheduler, service mesh integration, auto-scaling based on custom metrics, multi-cluster management, GitOps deployment pipeline, security policy enforcement, network policy management, storage orchestration, and integration with CI/CD systems  Include support for 10,000+ nodes, 1M+ containers, advanced scheduling algorithms, and comprehensive observability
+Develop a comprehensive customer segmentation system: Create customer data with 5000 customers including demographics, purchase_history, website_interactions, support_tickets, and engagement_metrics  Build an analyzer that implements K-means clustering, RFM analysis, behavioral segmentation, creates customer personas, generates targeted marketing recommendations, and produces detailed segment profiles with actionable insights
+Create a complete social media sentiment analysis system: Generate social media posts data with 10000 posts including post_text, platform, timestamp, user_demographics, engagement_metrics, and hashtags  Build a sentiment analyzer that performs sentiment classification, emotion detection, topic modeling, trend analysis, influencer identification, and generates comprehensive social media intelligence reports with visualizations
+Develop a comprehensive customer segmentation system: Create customer data with 5000 customers including demographics, purchase_history, website_interactions, support_tickets, and engagement_metrics  Build an analyzer that implements K-means clustering, RFM analysis, behavioral segmentation, creates customer personas, generates targeted marketing recommendations, and produces detailed segment profiles with actionable insights
+Create a complete social media sentiment analysis system: Generate social media posts data with 10000 posts including post_text, platform, timestamp, user_demographics, engagement_metrics, and hashtags  Build a sentiment analyzer that performs sentiment classification, emotion detection, topic modeling, trend analysis, influencer identification, and generates comprehensive social media intelligence reports with visualizations
+Develop a comprehensive customer segmentation system: Create customer data with 5000 customers including demographics, purchase_history, website_interactions, support_tickets, and engagement_metrics  Build an analyzer that implements K-means clustering, RFM analysis, behavioral segmentation, creates customer personas, generates targeted marketing recommendations, and produces detailed segment profiles with actionable insights
+Create a complete social media sentiment analysis system: Generate social media posts data with 10000 posts including post_text, platform, timestamp, user_demographics, engagement_metrics, and hashtags  Build a sentiment analyzer that performs sentiment classification, emotion detection, topic modeling, trend analysis, influencer identification, and generates comprehensive social media intelligence reports with visualizations
+Create a complete serverless computing platform with function-as-a-service, event-driven architecture, auto-scaling, cold start optimization, custom runtime support, distributed tracing, cost optimization, security isolation, and integration with cloud services  Include function orchestration, workflow management, debugging tools, performance monitoring, and support for 1M+ concurrent executions with sub-100ms cold start times
+Create a complete serverless computing platform with function-as-a-service, event-driven architecture, auto-scaling, cold start optimization, custom runtime support, distributed tracing, cost optimization, security isolation, and integration with cloud services  Include function orchestration, workflow management, debugging tools, performance monitoring, and support for 1M+ concurrent executions with sub-100ms cold start times
+Create a complete serverless computing platform with function-as-a-service, event-driven architecture, auto-scaling, cold start optimization, custom runtime support, distributed tracing, cost optimization, security isolation, and integration with cloud services  Include function orchestration, workflow management, debugging tools, performance monitoring, and support for 1M+ concurrent executions with sub-100ms cold start times
+Create a comprehensive distributed database system with automatic sharding, multi-master replication, consensus algorithms (Raft/PBFT), ACID transactions across shards, query optimization, data partitioning strategies, conflict resolution, backup and recovery, monitoring and alerting, and support for 1PB+ data with 99 999% availability  Include disaster recovery, cross-region replication, and integration with existing applications
+Create a comprehensive distributed database system with automatic sharding, multi-master replication, consensus algorithms (Raft/PBFT), ACID transactions across shards, query optimization, data partitioning strategies, conflict resolution, backup and recovery, monitoring and alerting, and support for 1PB+ data with 99 999% availability  Include disaster recovery, cross-region replication, and integration with existing applications
+Create a comprehensive distributed database system with automatic sharding, multi-master replication, consensus algorithms (Raft/PBFT), ACID transactions across shards, query optimization, data partitioning strategies, conflict resolution, backup and recovery, monitoring and alerting, and support for 1PB+ data with 99 999% availability  Include disaster recovery, cross-region replication, and integration with existing applications
+Create a complete digital banking platform with core banking functionality, mobile banking app, web portal, payment processing, fraud detection, regulatory reporting, customer onboarding with KYC/AML, loan origination system, investment management, credit scoring, open banking APIs, and integration with central bank systems  Include PCI DSS compliance, real-time transaction processing, multi-factor authentication, and 24/7 monitoring
+Create a complete digital banking platform with core banking functionality, mobile banking app, web portal, payment processing, fraud detection, regulatory reporting, customer onboarding with KYC/AML, loan origination system, investment management, credit scoring, open banking APIs, and integration with central bank systems  Include PCI DSS compliance, real-time transaction processing, multi-factor authentication, and 24/7 monitoring
+Create a complete digital banking platform with core banking functionality, mobile banking app, web portal, payment processing, fraud detection, regulatory reporting, customer onboarding with KYC/AML, loan origination system, investment management, credit scoring, open banking APIs, and integration with central bank systems  Include PCI DSS compliance, real-time transaction processing, multi-factor authentication, and 24/7 monitoring
+Develop a comprehensive genomic data analysis pipeline: Create genomic data with DNA sequences, gene expressions, mutation data, and phenotype information for 1000 samples  Build a genomics analyzer that performs sequence alignment, variant calling, gene expression analysis, pathway enrichment, population genetics analysis, and generates comprehensive genomic reports with statistical significance testing and biological interpretations
+Develop a comprehensive genomic data analysis pipeline: Create genomic data with DNA sequences, gene expressions, mutation data, and phenotype information for 1000 samples  Build a genomics analyzer that performs sequence alignment, variant calling, gene expression analysis, pathway enrichment, population genetics analysis, and generates comprehensive genomic reports with statistical significance testing and biological interpretations
+Develop a comprehensive genomic data analysis pipeline: Create genomic data with DNA sequences, gene expressions, mutation data, and phenotype information for 1000 samples  Build a genomics analyzer that performs sequence alignment, variant calling, gene expression analysis, pathway enrichment, population genetics analysis, and generates comprehensive genomic reports with statistical significance testing and biological interpretations
+Create a complete computer vision system for manufacturing quality control with defect detection, dimensional measurement, surface inspection, assembly verification, real-time processing of high-resolution images, integration with robotic systems, statistical process control, root cause analysis, and predictive maintenance  Include edge deployment, model versioning, continuous learning from production data, and integration with MES/ERP systems
+Create a complete computer vision system for manufacturing quality control with defect detection, dimensional measurement, surface inspection, assembly verification, real-time processing of high-resolution images, integration with robotic systems, statistical process control, root cause analysis, and predictive maintenance  Include edge deployment, model versioning, continuous learning from production data, and integration with MES/ERP systems
+Create a complete computer vision system for manufacturing quality control with defect detection, dimensional measurement, surface inspection, assembly verification, real-time processing of high-resolution images, integration with robotic systems, statistical process control, root cause analysis, and predictive maintenance  Include edge deployment, model versioning, continuous learning from production data, and integration with MES/ERP systems
+Create a complete time series forecasting system: Generate historical sales data with 2 years of daily sales data including date, product_category, sales_amount, promotional_events, weather_data, and seasonal_factors  Build a forecasting engine that implements ARIMA, exponential smoothing, and Prophet models, performs model comparison, generates 90-day forecasts with confidence intervals, and creates interactive visualizations with trend analysis
+Create a complete time series forecasting system: Generate historical sales data with 2 years of daily sales data including date, product_category, sales_amount, promotional_events, weather_data, and seasonal_factors  Build a forecasting engine that implements ARIMA, exponential smoothing, and Prophet models, performs model comparison, generates 90-day forecasts with confidence intervals, and creates interactive visualizations with trend analysis
+Create a complete time series forecasting system: Generate historical sales data with 2 years of daily sales data including date, product_category, sales_amount, promotional_events, weather_data, and seasonal_factors  Build a forecasting engine that implements ARIMA, exponential smoothing, and Prophet models, performs model comparison, generates 90-day forecasts with confidence intervals, and creates interactive visualizations with trend analysis
+Build a comprehensive supply chain management platform with demand forecasting, inventory optimization, supplier relationship management, procurement automation, logistics tracking, quality management, sustainability reporting, IoT sensor integration, blockchain-based traceability, AI-powered analytics, and integration with ERP systems  Support global operations across 50+ countries with multi-currency, multi-language, and regulatory compliance features
+Build a comprehensive supply chain management platform with demand forecasting, inventory optimization, supplier relationship management, procurement automation, logistics tracking, quality management, sustainability reporting, IoT sensor integration, blockchain-based traceability, AI-powered analytics, and integration with ERP systems  Support global operations across 50+ countries with multi-currency, multi-language, and regulatory compliance features
+Build a comprehensive supply chain management platform with demand forecasting, inventory optimization, supplier relationship management, procurement automation, logistics tracking, quality management, sustainability reporting, IoT sensor integration, blockchain-based traceability, AI-powered analytics, and integration with ERP systems  Support global operations across 50+ countries with multi-currency, multi-language, and regulatory compliance features
+Analyze whether a company should migrate from a monolithic architecture to microservices for an e-commerce platform  Consider factors including current system complexity (50+ modules), team size (25 developers), deployment frequency (weekly releases), scalability requirements (10x traffic growth expected), maintenance costs, development velocity, and technical debt  Provide a comprehensive analysis with pros, cons, implementation timeline, and risk assessment
+Develop a complete healthcare management platform with electronic health records (EHR), patient portal, appointment scheduling, telemedicine capabilities, prescription management, insurance claim processing, HIPAA compliance, HL7 FHIR integration, clinical decision support, medical imaging viewer, laboratory results integration, and interoperability with 50+ healthcare systems  Include security architecture, data encryption, audit logging, and disaster recovery
+Develop a complete healthcare management platform with electronic health records (EHR), patient portal, appointment scheduling, telemedicine capabilities, prescription management, insurance claim processing, HIPAA compliance, HL7 FHIR integration, clinical decision support, medical imaging viewer, laboratory results integration, and interoperability with 50+ healthcare systems  Include security architecture, data encryption, audit logging, and disaster recovery
+Develop a complete healthcare management platform with electronic health records (EHR), patient portal, appointment scheduling, telemedicine capabilities, prescription management, insurance claim processing, HIPAA compliance, HL7 FHIR integration, clinical decision support, medical imaging viewer, laboratory results integration, and interoperability with 50+ healthcare systems  Include security architecture, data encryption, audit logging, and disaster recovery
+Develop a comprehensive fraud detection system for financial transactions with real-time scoring, anomaly detection, graph neural networks for relationship analysis, ensemble models, feature engineering from transaction patterns, rule engine integration, case management workflow, investigator dashboard, and integration with external fraud databases  Include model interpretability, regulatory compliance reporting, and adaptive learning from fraud analyst feedback
+Develop a comprehensive fraud detection system for financial transactions with real-time scoring, anomaly detection, graph neural networks for relationship analysis, ensemble models, feature engineering from transaction patterns, rule engine integration, case management workflow, investigator dashboard, and integration with external fraud databases  Include model interpretability, regulatory compliance reporting, and adaptive learning from fraud analyst feedback
+Develop a comprehensive fraud detection system for financial transactions with real-time scoring, anomaly detection, graph neural networks for relationship analysis, ensemble models, feature engineering from transaction patterns, rule engine integration, case management workflow, investigator dashboard, and integration with external fraud databases  Include model interpretability, regulatory compliance reporting, and adaptive learning from fraud analyst feedback
+Build a complete recommendation system for a streaming platform serving 100M+ users with real-time personalization, collaborative filtering, content-based filtering, deep learning models, multi-armed bandit optimization, cold start problem handling, diversity optimization, explainable recommendations, and A/B testing framework  Include feature engineering pipeline, model serving infrastructure, real-time inference, and continuous model retraining with feedback loops
+Build a complete recommendation system for a streaming platform serving 100M+ users with real-time personalization, collaborative filtering, content-based filtering, deep learning models, multi-armed bandit optimization, cold start problem handling, diversity optimization, explainable recommendations, and A/B testing framework  Include feature engineering pipeline, model serving infrastructure, real-time inference, and continuous model retraining with feedback loops
+Build a complete recommendation system for a streaming platform serving 100M+ users with real-time personalization, collaborative filtering, content-based filtering, deep learning models, multi-armed bandit optimization, cold start problem handling, diversity optimization, explainable recommendations, and A/B testing framework  Include feature engineering pipeline, model serving infrastructure, real-time inference, and continuous model retraining with feedback loops
+Create a comprehensive natural language processing platform for enterprise document analysis with multi-language support, named entity recognition, sentiment analysis, document classification, information extraction, question-answering capabilities, text summarization, translation services, and integration with 20+ document formats  Include model fine-tuning pipeline, A/B testing framework, performance monitoring, and scalable inference serving for processing 1M+ documents daily
+Create a comprehensive natural language processing platform for enterprise document analysis with multi-language support, named entity recognition, sentiment analysis, document classification, information extraction, question-answering capabilities, text summarization, translation services, and integration with 20+ document formats  Include model fine-tuning pipeline, A/B testing framework, performance monitoring, and scalable inference serving for processing 1M+ documents daily
+Create a comprehensive natural language processing platform for enterprise document analysis with multi-language support, named entity recognition, sentiment analysis, document classification, information extraction, question-answering capabilities, text summarization, translation services, and integration with 20+ document formats  Include model fine-tuning pipeline, A/B testing framework, performance monitoring, and scalable inference serving for processing 1M+ documents daily
+Design and implement a complete autonomous vehicle perception system with computer vision for object detection, sensor fusion from LiDAR/camera/radar data, real-time path planning, behavioral prediction of other vehicles, traffic sign recognition, lane detection, obstacle avoidance, and integration with vehicle control systems  Include model training pipeline, edge deployment optimization, safety validation, simulation environment, and continuous learning capabilities for handling edge cases
+Design and implement a complete autonomous vehicle perception system with computer vision for object detection, sensor fusion from LiDAR/camera/radar data, real-time path planning, behavioral prediction of other vehicles, traffic sign recognition, lane detection, obstacle avoidance, and integration with vehicle control systems  Include model training pipeline, edge deployment optimization, safety validation, simulation environment, and continuous learning capabilities for handling edge cases
+Design and implement a complete autonomous vehicle perception system with computer vision for object detection, sensor fusion from LiDAR/camera/radar data, real-time path planning, behavioral prediction of other vehicles, traffic sign recognition, lane detection, obstacle avoidance, and integration with vehicle control systems  Include model training pipeline, edge deployment optimization, safety validation, simulation environment, and continuous learning capabilities for handling edge cases
+Create a comprehensive financial trading platform with real-time market data processing, algorithmic trading capabilities, risk management system, regulatory compliance features (MiFID II, Dodd-Frank), multi-asset support (stocks, bonds, derivatives, crypto), order management system, portfolio analytics, client reporting, and integration with 10+ market data providers  Include high-frequency trading support, latency optimization, fault tolerance, security measures, and regulatory audit trails
+Design and implement a complete global content delivery network (CDN) with edge computing capabilities, dynamic content caching, real-time video streaming optimization, DDoS protection, geographic load balancing, SSL/TLS termination, bandwidth optimization, origin shield architecture, and integration with cloud providers  Include traffic routing algorithms, cache invalidation strategies, performance monitoring, cost optimization, and support for 10Gbps+ throughput across 100+ global locations
+Create a comprehensive financial trading platform with real-time market data processing, algorithmic trading capabilities, risk management system, regulatory compliance features (MiFID II, Dodd-Frank), multi-asset support (stocks, bonds, derivatives, crypto), order management system, portfolio analytics, client reporting, and integration with 10+ market data providers  Include high-frequency trading support, latency optimization, fault tolerance, security measures, and regulatory audit trails
+Design and implement a complete global content delivery network (CDN) with edge computing capabilities, dynamic content caching, real-time video streaming optimization, DDoS protection, geographic load balancing, SSL/TLS termination, bandwidth optimization, origin shield architecture, and integration with cloud providers  Include traffic routing algorithms, cache invalidation strategies, performance monitoring, cost optimization, and support for 10Gbps+ throughput across 100+ global locations
+Create a comprehensive financial trading platform with real-time market data processing, algorithmic trading capabilities, risk management system, regulatory compliance features (MiFID II, Dodd-Frank), multi-asset support (stocks, bonds, derivatives, crypto), order management system, portfolio analytics, client reporting, and integration with 10+ market data providers  Include high-frequency trading support, latency optimization, fault tolerance, security measures, and regulatory audit trails
+Design and implement a complete global content delivery network (CDN) with edge computing capabilities, dynamic content caching, real-time video streaming optimization, DDoS protection, geographic load balancing, SSL/TLS termination, bandwidth optimization, origin shield architecture, and integration with cloud providers  Include traffic routing algorithms, cache invalidation strategies, performance monitoring, cost optimization, and support for 10Gbps+ throughput across 100+ global locations
+Design and implement a complete quantum-classical hybrid computing platform for optimization problems with quantum circuit compilation, error correction, classical preprocessing, quantum-classical interface, result post-processing, and integration with existing HPC infrastructure  Include quantum algorithm library, noise modeling, circuit optimization, hardware abstraction layer, and support for multiple quantum computing backends with automatic workload distribution based on problem characteristics
+Design and implement a complete quantum-classical hybrid computing platform for optimization problems with quantum circuit compilation, error correction, classical preprocessing, quantum-classical interface, result post-processing, and integration with existing HPC infrastructure  Include quantum algorithm library, noise modeling, circuit optimization, hardware abstraction layer, and support for multiple quantum computing backends with automatic workload distribution based on problem characteristics
+Design and implement a complete quantum-classical hybrid computing platform for optimization problems with quantum circuit compilation, error correction, classical preprocessing, quantum-classical interface, result post-processing, and integration with existing HPC infrastructure  Include quantum algorithm library, noise modeling, circuit optimization, hardware abstraction layer, and support for multiple quantum computing backends with automatic workload distribution based on problem characteristics
+Design and implement a complete enterprise-grade CRM system with multi-tenant architecture supporting 1000+ organizations, real-time analytics dashboard, automated marketing workflows, integration with 20+ third-party services, role-based access control with 15 different permission levels, audit logging for compliance, mobile-responsive interface, and support for 100,000+ concurrent users  Include database design, API architecture, security implementation, deployment strategy, monitoring setup, and disaster recovery plan
+Design and implement a complete enterprise-grade CRM system with multi-tenant architecture supporting 1000+ organizations, real-time analytics dashboard, automated marketing workflows, integration with 20+ third-party services, role-based access control with 15 different permission levels, audit logging for compliance, mobile-responsive interface, and support for 100,000+ concurrent users  Include database design, API architecture, security implementation, deployment strategy, monitoring setup, and disaster recovery plan
+Design and implement a complete enterprise-grade CRM system with multi-tenant architecture supporting 1000+ organizations, real-time analytics dashboard, automated marketing workflows, integration with 20+ third-party services, role-based access control with 15 different permission levels, audit logging for compliance, mobile-responsive interface, and support for 100,000+ concurrent users  Include database design, API architecture, security implementation, deployment strategy, monitoring setup, and disaster recovery plan

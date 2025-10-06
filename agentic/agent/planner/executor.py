@@ -17,23 +17,36 @@ from .task_generator import TaskGenerator
 from .task_executor import TaskExecutor
 from .validation import TaskValidator
 from .cache import CacheManager
+import asyncio
+import concurrent.futures
+
+import re
+
+import os
 
 # %% ../../../nbs/buddy/backend/agents/planner/executor.ipynb 2
 class DynamicTaskExecutor:
     """Production-ready dynamic task execution system"""
     
-    def __init__(self, model: str = None):
+    def __init__(self, agent=None, console=None, model: str = None):
         # Load model from config if not provided
         if model is None:
             model_config = get_model_config()
             model = model_config.get('name', 'qwen3:8b')
         self.model = model
-        config = AgentConfig(
-            name="dynamic_executor",
-            instructions="You are an AI agent that executes tasks systematically. Analyze requirements, break down complex problems, and provide detailed technical responses with proper implementation."
-        )
-        self.agent = Agent(config)
-        self.console = Console()
+        
+        # Use provided agent or create new one
+        if agent is not None:
+            self.agent = agent
+        else:
+            config = AgentConfig(
+                name="dynamic_executor",
+                instructions="You are an AI agent that executes tasks systematically. Analyze requirements, break down complex problems, and provide detailed technical responses with proper implementation."
+            )
+            self.agent = Agent(config)
+        
+        # Use provided console or create new one
+        self.console = console if console is not None else Console()
         
         # Initialize components
         self.breakdown_generator = ProjectBreakdownGenerator(self.agent, self.console)
@@ -50,6 +63,19 @@ class DynamicTaskExecutor:
         self.context: Optional[ProjectContext] = None
         self.project_breakdown = None
         self.estimated_total_tasks: int = 0
+        self.project_folder: Optional[str] = None
+        
+    def execute(self, user_request: str) -> ProjectContext:
+        """Synchronous wrapper for execute_project."""
+        try:
+            loop = asyncio.get_running_loop()
+            # We're in an event loop, create a new thread
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                future = pool.submit(asyncio.run, self.execute_project(user_request))
+                return future.result()
+        except RuntimeError:
+            # No event loop running, safe to use asyncio.run
+            return asyncio.run(self.execute_project(user_request))
     
     async def execute_project(self, user_request: str) -> ProjectContext:
         """Main execution loop with two-phase approach"""
@@ -72,6 +98,16 @@ class DynamicTaskExecutor:
                 return ProjectContext(original_request=user_request, project_status=ExecutionStatus.FAILED)
             
             self.console.print(f"✅ Project breakdown complete")
+            
+            # Create project folder based on title and move into it
+            self.project_folder = self._create_project_folder(self.project_breakdown.title)
+            self.console.print(f"📁 Created project folder: {self.project_folder}")
+            
+            # Re-save breakdown in project folder
+            filename = f"{self.project_breakdown.title.lower().replace(' ', '_')}_breakdown.txt"
+            if os.path.exists(f"../{filename}"):
+                import shutil
+                shutil.move(f"../{filename}", filename)
             
             # Initialize project context
             self.context = ProjectContext(original_request=user_request)
@@ -124,10 +160,16 @@ class DynamicTaskExecutor:
                 self.context.current_artifacts = []
                 
             artifacts = task_result.artifacts_created
-            if isinstance(artifacts, list):
-                self.context.current_artifacts.extend(artifacts)
-            elif artifacts:
-                self.context.current_artifacts.extend([str(artifacts)])
+            # Ensure artifacts is always a list
+            if not isinstance(artifacts, list):
+                if isinstance(artifacts, str):
+                    artifacts = [artifacts]
+                elif artifacts is None or isinstance(artifacts, bool):
+                    artifacts = []
+                else:
+                    artifacts = [str(artifacts)]
+            
+            self.context.current_artifacts.extend(artifacts)
             
             self.context.total_tasks_completed += 1
             
@@ -159,6 +201,26 @@ class DynamicTaskExecutor:
         self.console.print(f"\n🎉 Project execution completed! Generated {len(self.context.execution_history)} tasks.")
         return self.context
     
+    def _create_project_folder(self, title: str) -> str:
+        """Create project folder based on title"""
+        # Sanitize title for folder name - keep it simple and meaningful
+        folder_name = re.sub(r'[^\w\s-]', '', title).strip()
+        folder_name = re.sub(r'\s+', '-', folder_name).lower()
+        
+        # If title is too long, take first 2-3 words
+        parts = folder_name.split('-')
+        if len(parts) > 3:
+            folder_name = '-'.join(parts[:3])
+        
+        # Create folder if it doesn't exist
+        if not os.path.exists(folder_name):
+            os.makedirs(folder_name)
+        
+        # Change to project directory
+        os.chdir(folder_name)
+        
+        return folder_name
+    
     def _is_project_complete(self) -> bool:
         """Determine if project is complete based on progress"""
         if not self.context.execution_history:
@@ -183,4 +245,5 @@ class DynamicTaskExecutor:
         
         self.console.print(f"📊 Execution report saved to: {filename}")
         return filename
+
 

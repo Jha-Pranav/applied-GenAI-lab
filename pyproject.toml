@@ -8,6 +8,7 @@ dependencies = [
     "duckduckgo-search>=8.1.1",
     "fuzzywuzzy[speedup]>=0.18.0",
     "langgraph>=0.6.6",
+    "markdown>=3.9",
     "mlflow>=3.3.2",
     "nbdev>=2.4.5",
     "openai>=1.104.2",
@@ -19,6 +20,7 @@ dependencies = [
     "sympy>=1.14.0",
     "tiktoken>=0.11.0",
     "toml>=0.10.2",
+    "weave>=0.52.8",
 ]
 
 [dependency-groups]
