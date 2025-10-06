@@ -17,7 +17,7 @@ class PlannerTool(BaseTool):
             category=ToolCategory.INTELLIGENCE
         ))
     
-    def execute(self, request: str) -> Dict[str, Any]:
+    async def execute(self, request: str) -> Dict[str, Any]:
         """Execute planning and task execution using DynamicTaskExecutor"""
         try:
             import asyncio
@@ -35,7 +35,8 @@ class PlannerTool(BaseTool):
             
             # Execute planning
             executor = DynamicTaskExecutor(agent, console)
-            result = asyncio.run(executor.execute_project(request))
+            # result = asyncio.run(executor.execute_project(request))
+            result = await executor.execute_project(request)
             
             return {"success": True, "result": result}
             

@@ -325,20 +325,8 @@ Always choose the most appropriate approach based on the request type.""",
         ))
         
         while True:
-            try:
-                # Multi-line input handling
-                self.console.print("\n💬 You: ", end="")
-                lines = []
-                while True:
-                    try:
-                        line = input()
-                        if line.strip() == "":  # Empty line ends input
-                            break
-                        lines.append(line)
-                    except EOFError:  # Ctrl+D ends input
-                        break
-                
-                user_input = "\n".join(lines).strip()
+            try:            
+                user_input = input("\n💬 You: ").strip()
                 
                 if not user_input:
                     continue

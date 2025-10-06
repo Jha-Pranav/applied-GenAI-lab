@@ -40,7 +40,7 @@ class LLMClient:
         self.streaming_handler = StreamingHandler()
         
         # Validate connection
-        self._validate_connection()
+        # self._validate_connection()
     
     def _validate_connection(self):
         """Validate LLM connection"""
