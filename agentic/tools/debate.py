@@ -21,26 +21,37 @@ class DebateTool(BaseTool):
     def execute(self, topic: str, context: str = "", max_rounds: int = 2) -> Dict[str, Any]:
         """Execute debate analysis using DebateAgent"""
         try:
-            from ..agent.debater import create_debate
+            from agentic.agent.debater import create_debate
             
-            # Run debate asynchronously
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            
+            # Check if there's already a running event loop
             try:
-                result = loop.run_until_complete(
-                    create_debate(
-                        topic=topic,
-                        context=context,
-                        max_rounds=max_rounds
-                    )
-                )
+                loop = asyncio.get_running_loop()
+                # If we're in an async context, create a task
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    future = executor.submit(self._run_debate_sync, topic, context, max_rounds)
+                    result = future.result()
                 return {"success": True, "result": result}
-            finally:
-                loop.close()
+            except RuntimeError:
+                # No running loop, create a new one
+                result = asyncio.run(create_debate(
+                    topic=topic,
+                    context=context,
+                    max_rounds=max_rounds
+                ))
+                return {"success": True, "result": result}
                 
         except Exception as e:
             return {"success": False, "error": str(e)}
+    
+    def _run_debate_sync(self, topic: str, context: str, max_rounds: int):
+        """Run debate in a separate thread with its own event loop"""
+        from agentic.agent.debater import create_debate
+        return asyncio.run(create_debate(
+            topic=topic,
+            context=context,
+            max_rounds=max_rounds
+        ))
     
     def get_parameters_schema(self) -> Dict[str, Any]:
         return {
@@ -63,4 +74,5 @@ class DebateTool(BaseTool):
             },
             "required": ["topic"]
         }
+
 

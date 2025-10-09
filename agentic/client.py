@@ -10,7 +10,8 @@ from enum import Enum
 from dataclasses import dataclass
 from rich.console import Console
 from rich.panel import Panel
-
+from rich.align import Align
+from rich.panel import Panel
 from .tools.manager import ToolManager
 from .core.agent import Agent, AgentConfig
 from .configs.loader import get_model_config, get_settings_config, get_tools_config, get_reasoning_config
@@ -46,14 +47,46 @@ class BuddyClient:
         # Create agent config with routing instructions
         agent_config = AgentConfig(
             name="BuddyAgent",
-            instructions="""You are Buddy, an AI assistant that helps with various tasks using available tools.
+            instructions = """
+            You are Buddy, a helpful and reliable AI assistant that supports users by performing tasks and answering questions using a set of integrated tools.
 
-IMPORTANT ROUTING RULES:
-- For comparison questions, "which is better", "pros and cons", evaluation questions: Use the debate tool
-- For complex project requests like "build", "create", "develop", "implement": Use the planner tool  
-- For all other requests: Handle directly with available tools (fs_read, fs_write, execute_bash, code_interpreter)
+            🔧 AVAILABLE TOOLS:
+            - debate
+            - planner
+            - fs_read, fs_write
+            - execute_bash
+            - code_interpreter
 
-Always choose the most appropriate approach based on the request type.""",
+            📦 PACKAGE MANAGEMENT & TOOL EXECUTION:
+            - Before using the **code_interpreter** tool, always check if the required Python packages are installed.
+            - If any packages are missing, list them and explain why they are needed.
+            - Ask the user for permission to install them.
+            - Proceed with installation **only if the user explicitly agrees**.
+            - If permission is denied, gracefully inform the user and suggest alternatives if available.
+            - Ensure all dependencies are in place **before executing any code** via tools.
+
+            ⚙️ OPTIMIZATION GUIDELINES:
+            - Always evaluate the user's request and determine the most **optimal, efficient, and accurate** way to fulfill it.
+            - If you determine that a specific tool (e.g., code_interpreter, fs_write) can handle the task better than doing it manually, **use that tool proactively**.
+            - Minimize unnecessary steps or manual explanations when a tool-based solution is faster and more reliable.
+            - Prefer clarity, performance, and correctness when choosing methods or packages.
+
+            📌 ROUTING INSTRUCTIONS:
+            1. If the user asks for comparisons, pros and cons, trade-offs, or evaluation (e.g., "which is better", "compare X and Y"), use the **debate** tool.
+            2. If the user asks for complex, structured, or multi-step project work (e.g., "build", "create", "develop", "design", "implement"), use the **planner** tool.
+            3. For all other actionable tasks, use the most suitable tool from: **fs_read**, **fs_write**, **execute_bash**, or **code_interpreter**.
+
+            🎯 RESPONSE BEHAVIOR:
+            - Always respond to the user in terms of their original question or request — not just the tool command or raw output.
+            - Interpret and summarize tool results meaningfully to directly address the user's intent.
+            - Avoid exposing internal routing logic or tool commands unless explicitly asked.
+            - Maintain a natural, conversational, and helpful tone throughout.
+
+            💡 GOAL:
+            Deliver a smooth, intelligent, and user-focused interactive experience — context-aware, action-ready, always optimized, and respectful of user consent.
+            """
+            ,
+
             model=model or self.model_config.get('name'),
             temperature=self.model_config.get('temperature', 0.7),
             max_tokens=self.model_config.get('max_tokens')
@@ -69,84 +102,8 @@ Always choose the most appropriate approach based on the request type.""",
         self.auto_approve = self.settings_config.get('auto_approve', False)
         self.stream = True  # Always enable streaming
         self.debug = self.settings_config.get('debug', False)
-    
-    def analyze_request_complexity(self, request: str) -> AnalysisResult:
-        """Analyze request complexity and determine routing strategy"""
+
         
-        analysis_prompt = f"""
-        Analyze this user request and determine its complexity level:
-        
-        Request: "{request}"
-        
-        Consider these factors:
-        1. Number of steps required (1-2: simple, 3-5: moderate, 6+: complex)
-        2. Technical complexity and domain expertise needed
-        3. Need for decision-making or trade-off analysis
-        4. File system operations, code generation, or system commands
-        5. Planning and coordination requirements
-        6. Debate and multi-perspective analysis needs
-        
-        IMPORTANT: If the request contains words like "debate", "perspectives", "argue", "pros and cons", "should", "regulated", "analysis", "multiple viewpoints", "structured debate", or asks for decision analysis, set requires_debate=true and requires_planning=false.
-        
-        Respond with JSON:
-        {{
-            "complexity": "simple|moderate|complex",
-            "confidence": 0.0-1.0,
-            "reasoning": "Brief explanation",
-            "requires_planning": true/false,
-            "requires_debate": true/false,
-            "suggested_tools": ["tool1", "tool2"]
-        }}
-        """
-        
-        try:
-            response = self.agent.run(analysis_prompt, stream=True, max_iterations=1)
-            content = response.get("content", "")
-            
-            # Extract JSON from response
-            try:
-                data = json.loads(content)
-                return AnalysisResult(
-                    complexity=RequestComplexity(data.get("complexity", "simple")),
-                    confidence=data.get("confidence", 0.5),
-                    reasoning=data.get("reasoning", ""),
-                    requires_planning=data.get("requires_planning", False),
-                    requires_debate=data.get("requires_debate", False),
-                    suggested_tools=data.get("suggested_tools", [])
-                )
-            except (json.JSONDecodeError, ValueError):
-                return self._fallback_analysis(request)
-                
-        except Exception as e:
-            self.console.print(f"[red]Analysis error: {e}[/red]")
-            return self._fallback_analysis(request)
-    
-    def _fallback_analysis(self, request: str) -> AnalysisResult:
-        """Fallback analysis using simple heuristics"""
-        
-        # Simple keyword-based analysis
-        debate_keywords = ["should", "debate", "pros and cons", "analysis", "perspectives"]
-        planning_keywords = ["build", "create", "develop", "implement", "project"]
-        
-        requires_debate = any(keyword in request.lower() for keyword in debate_keywords)
-        requires_planning = any(keyword in request.lower() for keyword in planning_keywords)
-        
-        if requires_debate:
-            complexity = RequestComplexity.MODERATE
-        elif requires_planning:
-            complexity = RequestComplexity.COMPLEX
-        else:
-            complexity = RequestComplexity.SIMPLE
-        
-        return AnalysisResult(
-            complexity=complexity,
-            confidence=0.7,
-            reasoning="Fallback heuristic analysis",
-            requires_planning=requires_planning,
-            requires_debate=requires_debate,
-            suggested_tools=[]
-        )
-    
     def execute_simple_request(self, request: str, suggested_tools: List[str]) -> Dict[str, Any]:
         """Execute simple requests directly with Agent and tools"""
         
@@ -313,17 +270,31 @@ Always choose the most appropriate approach based on the request type.""",
             self.console.print(f"[red]❌ {error_msg}[/red]")
             return {"success": False, "error": error_msg}
     
+
     def interactive_session(self):
-        """Start interactive chat session"""
-        
+        """
+        Start an interactive chat session with Buddy AI.
+        """
+        welcome_message = (
+            "[bold green]👋 Welcome to [underline]Buddy AI[/underline]! 🤖[/bold green]\n\n"
+            "[cyan]I’m your assistant for coding, writing, and everyday tasks.[/cyan]\n"
+            "Ask me anything — from building projects to answering complex questions.\n\n"
+            "[bold yellow]✨ Available Commands:[/bold yellow]\n\n"
+            "  [bold red]➤ /quit[/bold red]     [dim]- Exit the session[/dim]\n"
+            "  [bold magenta]➤ /clear[/bold magenta]    [dim]- Clear the chat history[/dim]\n"
+        )
+
+        # Center-align the content inside the panel
+        # centered_content = Align.center(welcome_message, vertical="top")
+
         self.console.print(Panel(
-            "[bold green]Welcome to Buddy AI![/bold green]\n"
-            "Type your requests and I'll help you with various tasks.\n"
-            "Commands: /quit to exit, /clear to clear history",
-            title="🤖 Buddy AI Assistant",
-            border_style="green"
+            welcome_message,
+            title="[bold blue]💬 Buddy AI Assistant[/bold blue]",
+            border_style="bright_green",
+            padding=(1, 4)  # (top/bottom, left/right) padding
         ))
-        
+
+
         while True:
             try:            
                 user_input = input("\n💬 You: ").strip()

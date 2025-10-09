@@ -8,6 +8,7 @@ from .base import BaseTool
 from ..schemas import RepoQualityAnalyzerParams, QualityAnalysisResponse
 from pathlib import Path
 import fnmatch
+import os
 from typing import Dict, Any, List
 
 class CodeQualityTool(BaseTool):

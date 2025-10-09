@@ -29,7 +29,10 @@ class ToolCallMode(str, Enum):
     EXTRACT = "extract"
 
 class FsReadOperation(BaseModel):
-    mode: ToolCallMode
+    mode: ToolCallMode = Field(
+        default=ToolCallMode.DISCOVER,
+        description="Operation mode: 'discover' to list files or 'extract' to get content"
+    )
     path: str = Field(
         ...,
         description="Specific file or directory path to operate on, e.g., 'src' or 'app.py'. Relative to project root if not absolute."
@@ -73,6 +76,22 @@ class FsReadOperation(BaseModel):
         except Exception as e:
             logger.error(f"Unexpected error during path validation: {type(e).__name__} - {str(e)}")
             raise ValueError(f"Unexpected path validation error: {type(e).__name__} - {str(e)}")
+
+
+    @field_validator("mode")
+    @classmethod
+    def validate_mode(cls, value: ToolCallMode, info: ValidationInfo) -> ToolCallMode:
+        """Auto-set mode based on path if not explicitly provided."""
+        if value == ToolCallMode.DISCOVER:  # Default value
+            path = info.data.get("path")
+            if path:
+                try:
+                    path_obj = Path(path)
+                    if path_obj.exists() and path_obj.is_file():
+                        return ToolCallMode.EXTRACT
+                except Exception:
+                    pass  # Keep default if path validation fails
+        return value
 
     @field_validator("query")
     @classmethod
@@ -610,6 +629,19 @@ class FsReadTool(BaseTool):
             else:
                 if 'operations' not in kwargs and ('mode' in kwargs or 'path' in kwargs):
                     kwargs = {'operations': [kwargs]}
+                elif 'operations' in kwargs:
+                    # Ensure each operation has a mode if not specified
+                    for op in kwargs['operations']:
+                        if isinstance(op, dict) and 'mode' not in op:
+                            # Default to 'Line' mode if path exists, otherwise 'Directory'
+                            if 'path' in op:
+                                path_obj = Path(op['path'])
+                                if path_obj.exists() and path_obj.is_file():
+                                    op['mode'] = 'extract'
+                                else:
+                                    op['mode'] = 'discover'
+                            else:
+                                op['mode'] = 'discover'
                 params = FsReadParams(**kwargs)
         except ValidationError as e:
             error_msg = f"Invalid parameters: {extract_validation_error(e)}"
