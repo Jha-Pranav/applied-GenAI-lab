@@ -92,6 +92,7 @@ class StreamingHandler:
                     # Reasoning content (not added to final message)
                     if hasattr(delta, 'reasoning') and delta.reasoning:
                         think_started = show_thinking_content(delta.reasoning)
+                        show_thinking_footer()
         
                     if hasattr(delta, 'content') and delta.content:
                         content = delta.content
