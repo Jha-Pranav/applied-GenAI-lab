@@ -127,7 +127,7 @@ async def create_debate(topic: str, context: str, max_rounds: int = 2) -> Dict[s
     """Create and run a structured debate"""
     debate_config = DebateConfig(topic=topic, context=context, max_rounds=max_rounds)
 
-    base_config = AgentConfig(name="debate_agent", model="qwen3:14b")
+    base_config = AgentConfig(name="debate_agent", model="qwen3:8b")
     agents = {
         DebateRole.ADVOCATE: DebateAgent(base_config, DebateRole.ADVOCATE, debate_config),
         DebateRole.CRITIC: DebateAgent(base_config, DebateRole.CRITIC, debate_config),
