@@ -138,7 +138,6 @@ class StreamingHandler:
                             flush_markdown_line()
         
                         if first_token:
-                            show_thinking_footer()
                             first_token = False
         
                     # Tool calls
