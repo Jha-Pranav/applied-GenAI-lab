@@ -39,7 +39,7 @@ def show_thinking_header():
 def show_thinking_footer():
     """Display beautiful thinking footer"""
     if show_thinking:
-        print(f"{color_code}╰────────────────────────────────────────────────────────────╯{RESET}")
+        print(f"\n{color_code}╰────────────────────────────────────────────────────────────╯{RESET}")
 
 # %% ../../nbs/buddy/backend/llms/streaming_handler.ipynb 3
 class StreamingHandler:
@@ -92,7 +92,7 @@ class StreamingHandler:
                     # Reasoning content (not added to final message)
                     if hasattr(delta, 'reasoning') and delta.reasoning:
                         think_started = show_thinking_content(delta.reasoning)
-                        show_thinking_footer()
+
         
                     if hasattr(delta, 'content') and delta.content:
                         content = delta.content
@@ -125,16 +125,20 @@ class StreamingHandler:
                                 full_content += parts[1]
                                 flush_markdown_line()
                             continue
+                        
         
                         if in_think_tag:
-                            think_buffer += content
+                            think_buffer += content 
                             think_started = show_thinking_content(content)
+                            
                         else:
+                            
                             markdown_line_buffer += content
                             full_content += content
                             flush_markdown_line()
         
                         if first_token:
+                            show_thinking_footer()
                             first_token = False
         
                     # Tool calls
