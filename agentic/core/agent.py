@@ -199,7 +199,7 @@ class Agent:
                 continue  # Continue loop to process tool results
                 
         # Optional : Clean tool call details from the history
-        # self.conversation_history = [msg for msg in self.conversation_history if not (msg.role == "tool" or msg.tool_calls)]
+        self.conversation_history = [msg for msg in self.conversation_history if not (msg.role == "tool" or msg.tool_calls)]
         # Limit conversation history # TODO :Handle this in a smarter way
         if len(self.conversation_history) > 50:
             self.conversation_history = [self.conversation_history[0]] + self.conversation_history[-49:]

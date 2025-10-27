@@ -14,11 +14,10 @@ from .execute_bash import ExecuteBashTool
 from .code_interpreter import CodeInterpreterTool
 from .debate import DebateTool
 from .planner import PlannerTool
+from .mcp_tools import MCPToolFactory
 
-
-# %% ../../nbs/buddy/backend/tools/core/manager.ipynb 2
 class ToolManager:
-    """Enhanced tool manager"""
+    """Enhanced tool manager with MCP support"""
     
     def __init__(self):
         self.registry = ToolRegistry()
@@ -28,24 +27,39 @@ class ToolManager:
         """Register all default tools"""
         default_tools = [
             # Filesystem tools
-            FsReadTool(),
-            FsWriteTool(),
+            # FsReadTool(),
+            # FsWriteTool(),
             
-            # System tools
-            ExecuteBashTool(),
+            # # System tools
+            # ExecuteBashTool(),
             
-            # Analysis tools
-            CodeInterpreterTool(),
+            # # Analysis tools
+            # CodeInterpreterTool(),
             
-            # Intelligence tools
-            DebateTool(),
+            # # Intelligence tools
+            # DebateTool(),
             
-            # Planning tools
-            PlannerTool()
+            # # Planning tools
+            # PlannerTool()
         ]
+        
+        # Add all MCP tools from config
+        mcp_tools = MCPToolFactory.load_mcp_tools_from_config()
+        default_tools.extend(mcp_tools)
         
         for tool in default_tools:
             self.registry.register_tool(tool)
+    
+    def add_mcp_server(self, name: str, command: List[str], args: List[str] = None):
+        """Add an MCP server"""
+        self.mcp_manager.add_server(name, command, args)
+    
+    def execute_mcp_tool(self, server_name: str, tool_name: str, **kwargs) -> str:
+        """Execute an MCP tool"""
+        mcp_tool = self.mcp_manager.get_tool(server_name)
+        if mcp_tool:
+            return mcp_tool.execute(tool_name, **kwargs)
+        return f"MCP server '{server_name}' not found"
     
     def get_tools(self, tool_names: Optional[List[str]] = None) -> List[Dict[str, Any]]:
         """Get OpenAI-formatted tools"""

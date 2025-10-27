@@ -20,6 +20,7 @@ class ToolCategory(Enum):
     PLANNING = "planning"
     UTILITIES = "utilities"
     CUSTOM = "custom"
+    MCP = "mcp"
 
 
 @dataclass

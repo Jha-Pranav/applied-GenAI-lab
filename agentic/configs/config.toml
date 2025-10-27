@@ -1,7 +1,7 @@
 [model]
-name = "qwen3:0.6b"
+name = "qwen3:14b"
 #name = "gpt-oss:20b"
-#url = "http://192.168.29.147:11500/v1"
+# url = "http://192.168.29.147:11500/v1"
 url = "http://localhost:11434/v1"
 api_key = "ollama"
 timeout = 300.0
@@ -17,14 +17,9 @@ retry_count = 2
 
 [tools]
 default_tools = [
-    "fs_read",
-    "fs_write",
-    "execute_bash",
-    "code_interpreter", 
-    "introspect", 
-    "debate_agent", 
-    "task_planner", 
 
+    # MCP tools are loaded automatically from [mcp] section
+ 
     ]
 
 [paths]
@@ -37,3 +32,36 @@ enabled = false
 tracking_uri = "http://localhost:5000"
 experiment_name = "BuddyAI"
 enable_tracing = true
+
+[mcp]
+enabled = true
+servers = [
+    # Filesystem MCP server
+    { 
+        name = "filesystem", 
+        command = ["docker"], 
+        args = [
+        "run",
+        "-i",
+        "--rm",
+        "--volume=/home/pranav-pc/projects/applied-GenAI-lab:/project",
+        "ghcr.io/mark3labs/mcp-filesystem-server:latest",
+        "/project"
+        ],
+        description = "File operations - read, write, list, search files"
+    },
+    # Sequential thinking MCP server (acts as planner)
+    { 
+        name = "thinking", 
+        command = ["npx", "@modelcontextprotocol/server-sequential-thinking"], 
+        args = [],
+        description = "Structured problem solving and step-by-step thinking"
+    },
+    # Context7 documentation server
+    { 
+        name = "context7", 
+        command = ["npx", "@upstash/context7-mcp"], 
+        args = [],
+        description = "Library documentation and code examples"
+    }
+]
