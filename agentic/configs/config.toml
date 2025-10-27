@@ -37,31 +37,37 @@ enable_tracing = true
 enabled = true
 servers = [
     # Filesystem MCP server
+{ 
+    name = "filesystem",
+    command = ["npx"],
+    args = [
+        "-y",
+        "mcp-filesystem-server",
+        "/home/pranav-pc/projects/applied-GenAI-lab"
+    ],
+    description = "File operations - read, write, list, search files"
+},
+
+        # Filesystem MCP server
     { 
-        name = "filesystem", 
-        command = ["docker"], 
-        args = [
-        "run",
-        "-i",
-        "--rm",
-        "--volume=/home/pranav-pc/projects/applied-GenAI-lab:/project",
-        "ghcr.io/mark3labs/mcp-filesystem-server:latest",
-        "/project"
-        ],
-        description = "File operations - read, write, list, search files"
+        name = "Chrome DevTools", 
+        command = ["npx"], 
+        args =["chrome-devtools-mcp@latest"],
+        description = "Provides coding agents with programmatic access to Chrome DevTools for comprehensive browser control, inspection, and debugging."
     },
-    # Sequential thinking MCP server (acts as planner)
-    { 
-        name = "thinking", 
-        command = ["npx", "@modelcontextprotocol/server-sequential-thinking"], 
-        args = [],
-        description = "Structured problem solving and step-by-step thinking"
-    },
-    # Context7 documentation server
-    { 
-        name = "context7", 
-        command = ["npx", "@upstash/context7-mcp"], 
-        args = [],
-        description = "Library documentation and code examples"
-    }
-]
+
+#     # Sequential thinking MCP server (acts as planner)
+#     { 
+#         name = "thinking", 
+#         command = ["npx", "@modelcontextprotocol/server-sequential-thinking"], 
+#         args = [],
+#         description = "Structured problem solving and step-by-step thinking"
+#     },
+#     # Context7 documentation server
+#     { 
+#         name = "context7", 
+#         command = ["npx", "@upstash/context7-mcp"], 
+#         args = [],
+#         description = "Library documentation and code examples"
+#     }
+# ]

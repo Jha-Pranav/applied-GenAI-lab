@@ -38,4 +38,3 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 packages = ["agentic"]  
-{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"read_file","arguments":{"path":"README.md"}}}

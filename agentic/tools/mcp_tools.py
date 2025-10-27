@@ -29,7 +29,7 @@ class MCPTool(BaseTool):
 
     def __init__(self, server_name: str, server_config: Dict[str, Any]):
         metadata = ToolMetadata(
-            name=f"mcp_{server_name}",
+            name=f"{server_name}",
             description=f"MCP tool for {server_name} server",
             category=ToolCategory.MCP
         )
